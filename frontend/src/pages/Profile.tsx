@@ -105,30 +105,30 @@ function Profile() {
 
           <div className="space-y-4 mb-8">
             <div className="border-b pb-4">
-              <label className="block text-gray-600 text-sm font-semibold mb-1">
+              <span className="block text-gray-600 text-sm font-semibold mb-1">
                 First Name
-              </label>
+              </span>
               <p className="text-lg text-gray-800">{userInfo.firstName}</p>
             </div>
 
             <div className="border-b pb-4">
-              <label className="block text-gray-600 text-sm font-semibold mb-1">
+              <span className="block text-gray-600 text-sm font-semibold mb-1">
                 Last Name
-              </label>
+              </span>
               <p className="text-lg text-gray-800">{userInfo.lastName}</p>
             </div>
 
             <div className="border-b pb-4">
-              <label className="block text-gray-600 text-sm font-semibold mb-1">
+              <span className="block text-gray-600 text-sm font-semibold mb-1">
                 Email
-              </label>
+              </span>
               <p className="text-lg text-gray-800">{userInfo.email}</p>
             </div>
 
             <div className="border-b pb-4">
-              <label className="block text-gray-600 text-sm font-semibold mb-1">
+              <span className="block text-gray-600 text-sm font-semibold mb-1">
                 Account Type
-              </label>
+              </span>
               <p className="text-lg text-gray-800">
                 {userInfo.admin ? (
                   <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-semibold">
@@ -157,9 +157,9 @@ function Profile() {
             </div>
 
             <div className="border-b pb-4">
-              <label className="block text-gray-600 text-sm font-semibold mb-1">
+              <span className="block text-gray-600 text-sm font-semibold mb-1">
                 Member Since
-              </label>
+              </span>
               <p className="text-lg text-gray-800">
                 {new Date(userInfo.createdAt).toLocaleDateString('en-US', {
                   year: 'numeric',
