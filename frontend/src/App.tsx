@@ -1,12 +1,17 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Navbar from './components/Navbar';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import Sessions from './pages/Sessions';
-import SessionDetail from './pages/SessionDetail';
-import SessionForm from './pages/SessionForm';
-import Profile from './pages/Profile';
-import { authService } from './services/auth.service';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import Navbar from "./components/Navbar";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Sessions from "./pages/Sessions";
+import SessionDetail from "./pages/SessionDetail";
+import SessionForm from "./pages/SessionForm";
+import Profile from "./pages/Profile";
+import { authService } from "./services/auth.service";
 
 function PrivateRoute({ children }: any) {
   const isAuthenticated = authService.isAuthenticated();

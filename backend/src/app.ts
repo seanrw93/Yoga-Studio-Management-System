@@ -1,7 +1,7 @@
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import routes from './routes';
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import routes from "./routes";
 
 dotenv.config();
 
@@ -17,14 +17,14 @@ app.use(express.urlencoded({ extended: true }));
 app.use(routes);
 
 // Health check
-app.get('/api/health', (req, res) => {
-  res.status(200).json({ status: 'ok', message: 'Yoga Studio API is running' });
+app.get("/api/health", (req, res) => {
+  res.status(200).json({ status: "ok", message: "Yoga Studio API is running" });
 });
 
 // Start server
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
 });
 
 export default app;

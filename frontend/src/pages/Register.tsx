@@ -1,16 +1,16 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { authService } from '../services/auth.service';
+import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { authService } from "../services/auth.service";
 
 function Register() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState<any>({
-    email: '',
-    password: '',
-    firstName: '',
-    lastName: '',
+    email: "",
+    password: "",
+    firstName: "",
+    lastName: "",
   });
-  const [error, setError] = useState<any>('');
+  const [error, setError] = useState<any>("");
   const [loading, setLoading] = useState<any>(false);
 
   const handleChange = (e: any): any => {
@@ -22,14 +22,14 @@ function Register() {
 
   const handleSubmit = async (e: any): Promise<any> => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     try {
       await authService.register(formData);
-      navigate('/sessions');
+      navigate("/sessions");
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Registration failed');
+      setError(err.response?.data?.message || "Registration failed");
     } finally {
       setLoading(false);
     }
@@ -50,7 +50,10 @@ function Register() {
 
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label htmlFor="register-first-name" className="block text-gray-700 text-sm font-bold mb-2">
+            <label
+              htmlFor="register-first-name"
+              className="block text-gray-700 text-sm font-bold mb-2"
+            >
               First Name
             </label>
             <input
@@ -65,7 +68,10 @@ function Register() {
           </div>
 
           <div className="mb-4">
-            <label htmlFor="register-last-name" className="block text-gray-700 text-sm font-bold mb-2">
+            <label
+              htmlFor="register-last-name"
+              className="block text-gray-700 text-sm font-bold mb-2"
+            >
               Last Name
             </label>
             <input
@@ -80,7 +86,10 @@ function Register() {
           </div>
 
           <div className="mb-4">
-            <label htmlFor="register-email" className="block text-gray-700 text-sm font-bold mb-2">
+            <label
+              htmlFor="register-email"
+              className="block text-gray-700 text-sm font-bold mb-2"
+            >
               Email
             </label>
             <input
@@ -95,7 +104,10 @@ function Register() {
           </div>
 
           <div className="mb-6">
-            <label htmlFor="register-password" className="block text-gray-700 text-sm font-bold mb-2">
+            <label
+              htmlFor="register-password"
+              className="block text-gray-700 text-sm font-bold mb-2"
+            >
               Password
             </label>
             <input
@@ -115,12 +127,12 @@ function Register() {
             disabled={loading}
             className="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 disabled:bg-gray-400"
           >
-            {loading ? 'Registering...' : 'Register'}
+            {loading ? "Registering..." : "Register"}
           </button>
         </form>
 
         <p className="mt-4 text-center text-gray-600">
-          Already have an account?{' '}
+          Already have an account?{" "}
           <Link to="/login" className="text-indigo-600 hover:text-indigo-800">
             Login here
           </Link>
