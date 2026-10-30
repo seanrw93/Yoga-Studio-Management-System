@@ -35,15 +35,11 @@ router.put("/api/session/:id", authMiddleware, (req, res) =>
 router.delete("/api/session/:id", authMiddleware, (req, res) =>
   sessionController.delete(req, res),
 );
-router.post(
-  "/api/session/:id/participate/:userId",
-  authMiddleware,
-  (req, res) => sessionController.participate(req, res),
+router.post("/api/session/:id/participate/", authMiddleware, (req, res) =>
+  sessionController.participate(req, res),
 );
-router.delete(
-  "/api/session/:id/participate/:userId",
-  authMiddleware,
-  (req, res) => sessionController.unparticipate(req, res),
+router.delete("/api/session/:id/participate/", authMiddleware, (req, res) =>
+  sessionController.unparticipate(req, res),
 );
 
 // Teacher routes (protected)

@@ -1,11 +1,10 @@
-import { Response } from "express";
+import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
-import { AuthRequest } from "../middleware/auth.middleware";
 
 const prisma = new PrismaClient();
 
 export class TeacherController {
-  async getAll(req: AuthRequest, res: Response) {
+  async getAll(req: Request, res: Response) {
     try {
       const teachers = await prisma.teacher.findMany({
         orderBy: {
@@ -28,7 +27,7 @@ export class TeacherController {
     }
   }
 
-  async getById(req: AuthRequest, res: Response) {
+  async getById(req: Request, res: Response) {
     try {
       const { id } = req.params as { id: string };
 

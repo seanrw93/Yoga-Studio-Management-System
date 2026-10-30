@@ -1,11 +1,10 @@
-import { Response } from "express";
+import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
-import { AuthRequest } from "../middleware/auth.middleware";
 
 const prisma = new PrismaClient();
 
 export class UserController {
-  async getById(req: AuthRequest, res: Response) {
+  async getById(req: Request, res: Response) {
     try {
       const { id } = req.params as { id: string };
 
@@ -44,7 +43,7 @@ export class UserController {
     }
   }
 
-  async delete(req: AuthRequest, res: Response) {
+  async delete(req: Request, res: Response) {
     try {
       const { id } = req.params as { id: string };
 
@@ -83,7 +82,7 @@ export class UserController {
     }
   }
 
-  async promoteSelfToAdmin(req: AuthRequest, res: Response) {
+  async promoteSelfToAdmin(req: Request, res: Response) {
     try {
       const isDev = (process.env.NODE_ENV || "development") === "development";
       if (!isDev) {
