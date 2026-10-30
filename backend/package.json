@@ -10,7 +10,12 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "ts-node prisma/seed.ts",
-    "prisma:studio": "prisma studio"
+    "prisma:studio": "prisma studio",
+    "precommit": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/pre-commit.ps1",
+    "prepush": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/pre-push.ps1",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src",
+    "format:check": "prettier --check \"src/**/*.ts\""
   },
   "keywords": [],
   "author": "",
@@ -25,14 +30,18 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/bcrypt": "^6.0.0",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^22",
+    "eslint": "^10.13.0",
     "nodemon": "^3.1.11",
+    "prettier": "^3.9.10",
     "prisma": "^5.20.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.72.1"
   }
 }

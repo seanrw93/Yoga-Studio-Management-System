@@ -1,24 +1,24 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { authService } from '../services/auth.service';
+import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { authService } from "../services/auth.service";
 
 function Login() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState<any>('');
-  const [password, setPassword] = useState<any>('');
-  const [error, setError] = useState<any>('');
+  const [email, setEmail] = useState<any>("");
+  const [password, setPassword] = useState<any>("");
+  const [error, setError] = useState<any>("");
   const [loading, setLoading] = useState<any>(false);
 
   const handleSubmit = async (e: any): Promise<any> => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     try {
       await authService.login({ email, password });
-      navigate('/sessions');
+      navigate("/sessions");
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Login failed');
+      setError(err.response?.data?.message || "Login failed");
     } finally {
       setLoading(false);
     }
@@ -39,7 +39,10 @@ function Login() {
 
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label htmlFor="login-email" className="block text-gray-700 text-sm font-bold mb-2">
+            <label
+              htmlFor="login-email"
+              className="block text-gray-700 text-sm font-bold mb-2"
+            >
               Email
             </label>
             <input
@@ -54,7 +57,10 @@ function Login() {
           </div>
 
           <div className="mb-6">
-            <label htmlFor="login-password" className="block text-gray-700 text-sm font-bold mb-2">
+            <label
+              htmlFor="login-password"
+              className="block text-gray-700 text-sm font-bold mb-2"
+            >
               Password
             </label>
             <input
@@ -73,13 +79,16 @@ function Login() {
             disabled={loading}
             className="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 disabled:bg-gray-400"
           >
-            {loading ? 'Loading...' : 'Login'}
+            {loading ? "Loading..." : "Login"}
           </button>
         </form>
 
         <p className="mt-4 text-center text-gray-600">
-          Don't have an account?{' '}
-          <Link to="/register" className="text-indigo-600 hover:text-indigo-800">
+          Don't have an account?{" "}
+          <Link
+            to="/register"
+            className="text-indigo-600 hover:text-indigo-800"
+          >
             Register here
           </Link>
         </p>

@@ -1,0 +1,25 @@
+{
+  "name": "repo",
+  "version": "1.0.0",
+  "description": "A full-stack web application for managing yoga studio operations, including session scheduling, teacher management, and user registrations.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepare": "husky"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/seanrw93/Yoga-Studio-Management-System.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/seanrw93/Yoga-Studio-Management-System/issues"
+  },
+  "homepage": "https://github.com/seanrw93/Yoga-Studio-Management-System#readme",
+  "devDependencies": {
+    "husky": "^9.1.7"
+  }
+}

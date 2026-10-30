@@ -1,13 +1,13 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import api from '../services/api';
-import { authService } from '../services/auth.service';
-import { Session } from '../types';
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import api from "../services/api";
+import { authService } from "../services/auth.service";
+import { Session } from "../types";
 
 function Sessions() {
   const [sessions, setSessions] = useState<any>([]);
   const [loading, setLoading] = useState<any>(true);
-  const [error, setError] = useState<any>('');
+  const [error, setError] = useState<any>("");
   const user = authService.getCurrentUser();
   const token = authService.getToken();
 
@@ -18,14 +18,14 @@ function Sessions() {
   const fetchSessions = async (): Promise<any> => {
     try {
       setLoading(true);
-      const response = await api.get<Session[]>('/session', {
+      const response = await api.get<Session[]>("/session", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
       setSessions(response.data);
     } catch (err: any) {
-      setError('Failed to load sessions');
+      setError("Failed to load sessions");
       console.error(err);
     } finally {
       setLoading(false);
@@ -33,7 +33,7 @@ function Sessions() {
   };
 
   const handleDelete = async (sessionId: any): Promise<any> => {
-    if (!window.confirm('Are you sure you want to delete this session?')) {
+    if (!window.confirm("Are you sure you want to delete this session?")) {
       return;
     }
 
@@ -45,7 +45,7 @@ function Sessions() {
       });
       fetchSessions();
     } catch (err: any) {
-      alert('Failed to delete session');
+      alert("Failed to delete session");
       console.error(err);
     }
   };
@@ -90,7 +90,10 @@ function Sessions() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {sessions.map((session: any) => (
-              <div key={session.id} className="bg-white rounded-lg shadow-md p-6">
+              <div
+                key={session.id}
+                className="bg-white rounded-lg shadow-md p-6"
+              >
                 <h3 className="text-xl font-bold text-gray-800 mb-2">
                   {session.name}
                 </h3>
@@ -98,7 +101,8 @@ function Sessions() {
                   Date: {new Date(session.date).toLocaleDateString()}
                 </p>
                 <p className="text-gray-600 mb-2">
-                  Teacher: {session.teacher.firstName} {session.teacher.lastName}
+                  Teacher: {session.teacher.firstName}{" "}
+                  {session.teacher.lastName}
                 </p>
                 <p className="text-gray-600 mb-4">
                   Participants: {session.users.length}

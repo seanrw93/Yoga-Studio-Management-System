@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+set -e
+
+echo "Running frontend checks..."
+npm --prefix frontend run precommit
+
+echo "Running backend checks..."
+npm --prefix backend run precommit
+
+echo "Pre-commit checks passed."
