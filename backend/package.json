@@ -11,8 +11,8 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "ts-node prisma/seed.ts",
     "prisma:studio": "prisma studio",
-    "precommit": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/pre-commit.ps1",
-    "prepush": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/pre-push.ps1",
+    "precommit": "npm run typecheck && npm run lint && npm run format:check",
+    "prepush": "npm run typecheck",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src",
     "format:check": "prettier --check \"src/**/*.ts\""

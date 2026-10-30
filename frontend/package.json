@@ -6,8 +6,8 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "precommit": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/pre-commit.ps1",
-    "prepush": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/pre-push.ps1",
+    "precommit": "npm run typecheck && npm run lint && npm run format:check",
+    "prepush": "npm run typecheck",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\""
