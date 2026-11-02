@@ -73,8 +73,11 @@ export class UserController {
 
   async promoteSelfToAdmin(req: Request, res: Response) {
     try {
-      const isDev = (process.env.NODE_ENV || "development") === "development";
-      if (!isDev) {
+      const selfPromotionEnabled =
+        process.env.NODE_ENV === "development" &&
+        process.env.ENABLE_ADMIN_SELF_PROMOTION === "true";
+
+      if (!selfPromotionEnabled) {
         return res.status(403).json({
           message: "Admin self-promotion is only available in development",
         });
