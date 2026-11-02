@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
+import { parseId } from "../utils/parse-id.util";
 
 const prisma = new PrismaClient();
 
@@ -29,15 +30,9 @@ export class TeacherController {
 
   async getById(req: Request, res: Response) {
     try {
-      const { id } = req.params as { id: string };
+      const teacherId = parseId(req.params.id);
 
-      if (!id) {
-        return res.status(400).json({ message: "Teacher ID is required" });
-      }
-
-      const teacherId = parseInt(id);
-
-      if (isNaN(teacherId)) {
+      if (teacherId === null) {
         return res.status(400).json({ message: "Invalid teacher ID" });
       }
 

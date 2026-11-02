@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { Prisma, PrismaClient } from "@prisma/client";
 import { SessionResponse } from "../types/session.types";
+import { parseId } from "../utils/parse-id.util";
 
 const prisma = new PrismaClient();
 
@@ -42,15 +43,9 @@ export class SessionController {
 
   async getById(req: Request, res: Response) {
     try {
-      const { id } = req.params as { id: string };
+      const sessionId = parseId(req.params.id);
 
-      if (!id) {
-        return res.status(400).json({ message: "Session ID is required" });
-      }
-
-      const sessionId = parseInt(id);
-
-      if (isNaN(sessionId)) {
+      if (sessionId === null) {
         return res.status(400).json({ message: "Invalid session ID" });
       }
 
@@ -109,14 +104,6 @@ export class SessionController {
         return res.status(400).json({ message: "Teacher ID is required" });
       }
 
-      const user = await prisma.user.findUnique({
-        where: { id: req.userId },
-      });
-
-      if (!user || !user.admin) {
-        return res.status(403).json({ message: "Admin access required" });
-      }
-
       const teacher = await prisma.teacher.findUnique({
         where: { id: teacherId },
       });
@@ -162,25 +149,12 @@ export class SessionController {
 
   async update(req: Request, res: Response) {
     try {
-      const { id } = req.params as { id: string };
       const { name, date, description, teacherId } = req.body;
 
-      if (!id) {
-        return res.status(400).json({ message: "Session ID is required" });
-      }
+      const sessionId = parseId(req.params.id);
 
-      const sessionId = parseInt(id);
-
-      if (isNaN(sessionId)) {
+      if (sessionId === null) {
         return res.status(400).json({ message: "Invalid session ID" });
-      }
-
-      const user = await prisma.user.findUnique({
-        where: { id: req.userId },
-      });
-
-      if (!user || !user.admin) {
-        return res.status(403).json({ message: "Admin access required" });
       }
 
       const existingSession = await prisma.session.findUnique({
@@ -242,24 +216,10 @@ export class SessionController {
 
   async delete(req: Request, res: Response) {
     try {
-      const { id } = req.params as { id: string };
+      const sessionId = parseId(req.params.id);
 
-      if (!id) {
-        return res.status(400).json({ message: "Session ID is required" });
-      }
-
-      const sessionId = parseInt(id);
-
-      if (isNaN(sessionId)) {
+      if (sessionId === null) {
         return res.status(400).json({ message: "Invalid session ID" });
-      }
-
-      const user = await prisma.user.findUnique({
-        where: { id: req.userId },
-      });
-
-      if (!user || !user.admin) {
-        return res.status(403).json({ message: "Admin access required" });
       }
 
       const existingSession = await prisma.session.findUnique({
@@ -283,14 +243,14 @@ export class SessionController {
 
   async participate(req: Request, res: Response) {
     try {
-      const sessionId = Number(req.params.id);
+      const sessionId = parseId(req.params.id);
       const participantUserId = req.userId;
 
       if (!participantUserId) {
         return res.status(401).json({ message: "Authentication required" });
       }
 
-      if (!Number.isInteger(sessionId) || sessionId <= 0) {
+      if (sessionId === null) {
         return res.status(400).json({
           message: "Invalid session ID",
         });
@@ -342,9 +302,9 @@ export class SessionController {
 
   async unparticipate(req: Request, res: Response) {
     try {
-      const sessionId = Number(req.params.id);
+      const sessionId = parseId(req.params.id);
 
-      if (!sessionId) {
+      if (sessionId === null) {
         return res.status(400).json({ message: "Invalid session ID" });
       }
 

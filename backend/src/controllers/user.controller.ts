@@ -1,20 +1,15 @@
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
+import { parseId } from "../utils/parse-id.util";
 
 const prisma = new PrismaClient();
 
 export class UserController {
   async getById(req: Request, res: Response) {
     try {
-      const { id } = req.params as { id: string };
+      const userId = parseId(req.params.id);
 
-      if (!id) {
-        return res.status(400).json({ message: "User ID is required" });
-      }
-
-      const userId = parseInt(id);
-
-      if (isNaN(userId)) {
+      if (userId === null) {
         return res.status(400).json({ message: "Invalid user ID" });
       }
 
@@ -45,15 +40,9 @@ export class UserController {
 
   async delete(req: Request, res: Response) {
     try {
-      const { id } = req.params as { id: string };
+      const userId = parseId(req.params.id);
 
-      if (!id) {
-        return res.status(400).json({ message: "User ID is required" });
-      }
-
-      const userId = parseInt(id);
-
-      if (isNaN(userId)) {
+      if (userId === null) {
         return res.status(400).json({ message: "Invalid user ID" });
       }
 

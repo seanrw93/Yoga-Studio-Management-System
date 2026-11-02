@@ -4,6 +4,10 @@ import { SessionController } from "../controllers/session.controller";
 import { TeacherController } from "../controllers/teacher.controller";
 import { UserController } from "../controllers/user.controller";
 import { authMiddleware } from "../middleware/auth.middleware";
+import {
+  requireAdmin,
+  requireSelfOrAdmin,
+} from "../middleware/authorize.middleware";
 
 const router = Router();
 
@@ -26,13 +30,13 @@ router.get("/api/session", authMiddleware, (req, res) =>
 router.get("/api/session/:id", authMiddleware, (req, res) =>
   sessionController.getById(req, res),
 );
-router.post("/api/session", authMiddleware, (req, res) =>
+router.post("/api/session", authMiddleware, requireAdmin, (req, res) =>
   sessionController.create(req, res),
 );
-router.put("/api/session/:id", authMiddleware, (req, res) =>
+router.put("/api/session/:id", authMiddleware, requireAdmin, (req, res) =>
   sessionController.update(req, res),
 );
-router.delete("/api/session/:id", authMiddleware, (req, res) =>
+router.delete("/api/session/:id", authMiddleware, requireAdmin, (req, res) =>
   sessionController.delete(req, res),
 );
 router.post("/api/session/:id/participate/", authMiddleware, (req, res) =>
@@ -51,7 +55,7 @@ router.get("/api/teacher/:id", authMiddleware, (req, res) =>
 );
 
 // User routes (protected)
-router.get("/api/user/:id", authMiddleware, (req, res) =>
+router.get("/api/user/:id", authMiddleware, requireSelfOrAdmin, (req, res) =>
   userController.getById(req, res),
 );
 router.post("/api/user/promote-admin", authMiddleware, (req, res) =>
