@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import { parseId } from "../utils/parse-id.util";
+import { TeacherResponse } from "../types/teacher.types";
 
 const prisma = new PrismaClient();
 
@@ -13,16 +14,18 @@ export class TeacherController {
         },
       });
 
-      const response: any = teachers.map((teacher: any) => ({
-        id: teacher.id,
-        firstName: teacher.firstName,
-        lastName: teacher.lastName,
-        createdAt: teacher.createdAt,
-        updatedAt: teacher.updatedAt,
-      }));
+      const response: TeacherResponse[] = teachers.map(
+        (teacher: TeacherResponse) => ({
+          id: teacher.id,
+          firstName: teacher.firstName,
+          lastName: teacher.lastName,
+          createdAt: teacher.createdAt,
+          updatedAt: teacher.updatedAt,
+        }),
+      );
 
       return res.status(200).json(response);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Get teachers error:", error);
       return res.status(500).json({ message: "Internal server error" });
     }
@@ -44,7 +47,7 @@ export class TeacherController {
         return res.status(404).json({ message: "Teacher not found" });
       }
 
-      const response: any = {
+      const response: TeacherResponse = {
         id: teacher.id,
         firstName: teacher.firstName,
         lastName: teacher.lastName,
@@ -53,7 +56,7 @@ export class TeacherController {
       };
 
       return res.status(200).json(response);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Get teacher error:", error);
       return res.status(500).json({ message: "Internal server error" });
     }

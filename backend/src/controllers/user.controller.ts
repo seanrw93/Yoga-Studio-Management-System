@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import { parseId } from "../utils/parse-id.util";
+import { UserResponse } from "../types/user.types";
 
 const prisma = new PrismaClient();
 
@@ -21,7 +22,7 @@ export class UserController {
         return res.status(404).json({ message: "User not found" });
       }
 
-      const response: any = {
+      const response: UserResponse = {
         id: user.id,
         email: user.email,
         firstName: user.firstName,
@@ -32,7 +33,7 @@ export class UserController {
       };
 
       return res.status(200).json(response);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Get user error:", error);
       return res.status(500).json({ message: "Internal server error" });
     }
@@ -65,7 +66,7 @@ export class UserController {
       });
 
       return res.status(200).json({ message: "User deleted successfully" });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Delete user error:", error);
       return res.status(500).json({ message: "Internal server error" });
     }
@@ -96,7 +97,7 @@ export class UserController {
       }
 
       if (user.admin) {
-        return res.status(200).json({
+        const response: UserResponse = {
           id: user.id,
           email: user.email,
           firstName: user.firstName,
@@ -104,7 +105,9 @@ export class UserController {
           admin: user.admin,
           createdAt: user.createdAt,
           updatedAt: user.updatedAt,
-        });
+        };
+
+        return res.status(200).json(response);
       }
 
       const updatedUser = await prisma.user.update({
@@ -112,7 +115,7 @@ export class UserController {
         data: { admin: true },
       });
 
-      return res.status(200).json({
+      const response: UserResponse = {
         id: updatedUser.id,
         email: updatedUser.email,
         firstName: updatedUser.firstName,
@@ -120,8 +123,10 @@ export class UserController {
         admin: updatedUser.admin,
         createdAt: updatedUser.createdAt,
         updatedAt: updatedUser.updatedAt,
-      });
-    } catch (error: any) {
+      };
+
+      return res.status(200).json(response);
+    } catch (error: unknown) {
       console.error("Promote user error:", error);
       return res.status(500).json({ message: "Internal server error" });
     }

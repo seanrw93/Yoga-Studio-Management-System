@@ -202,13 +202,13 @@ export class SessionController {
           firstName: session.teacher.firstName,
           lastName: session.teacher.lastName,
         },
-        users: session.participants.map((p: any) => p.user.id),
+        users: session.participants.map((p) => p.user.id),
         createdAt: session.createdAt,
         updatedAt: session.updatedAt,
       };
 
       return res.status(200).json(response);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Update session error:", error);
       return res.status(500).json({ message: "Internal server error" });
     }
@@ -235,7 +235,7 @@ export class SessionController {
       });
 
       return res.status(200).json({ message: "Session deleted successfully" });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Delete session error:", error);
       return res.status(500).json({ message: "Internal server error" });
     }

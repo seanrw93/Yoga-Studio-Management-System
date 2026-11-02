@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import * as bcrypt from "bcrypt";
 import { generateToken } from "../utils/jwt.util";
+import { AuthResponse } from "../types/auth.types";
 
 const prisma = new PrismaClient();
 
@@ -39,7 +40,7 @@ export class AuthController {
 
       const token = generateToken(user.id);
 
-      const response: any = {
+      const response: AuthResponse = {
         id: user.id,
         email: user.email,
         firstName: user.firstName,
@@ -49,7 +50,7 @@ export class AuthController {
       };
 
       return res.status(200).json(response);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Login error:", error);
       return res.status(500).json({ message: "Internal server error" });
     }
@@ -99,7 +100,7 @@ export class AuthController {
 
       const token = generateToken(user.id);
 
-      const response: any = {
+      const response: AuthResponse = {
         id: user.id,
         email: user.email,
         firstName: user.firstName,
@@ -109,7 +110,7 @@ export class AuthController {
       };
 
       return res.status(201).json(response);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Register error:", error);
       return res.status(500).json({ message: "Internal server error" });
     }
