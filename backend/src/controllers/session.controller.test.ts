@@ -688,33 +688,33 @@ describe("SessionController.unparticipate", () => {
     expect(participationDeleteMock).not.toHaveBeenCalled();
   });
 
-  // it("deletes participation for the authenticated user, ignoring spoofed IDs", async () => {
-  //   participationFindUniqueMock.mockResolvedValue({
-  //     sessionId: 10,
-  //     userId: 42,
-  //   });
-  //   participationDeleteMock.mockResolvedValue({ sessionId: 10, userId: 42 });
-  //   const req = createRequest(
-  //     42,
-  //     { id: "10" },
-  //     { userId: 99 },
-  //     { userId: "99" },
-  //   );
-  //   const res = createResponse();
+  it("deletes participation for the authenticated user, ignoring spoofed IDs", async () => {
+    participationFindUniqueMock.mockResolvedValue({
+      sessionId: 10,
+      userId: 42,
+    });
+    participationDeleteMock.mockResolvedValue({ sessionId: 10, userId: 42 });
+    const req = createRequest(
+      42,
+      { id: "10" },
+      { userId: 99 },
+      { userId: "99" },
+    );
+    const res = createResponse();
 
-  //   await controller.unparticipate(req, res);
+    await controller.unparticipate(req, res);
 
-  //   expect(participationFindUniqueMock).toHaveBeenCalledWith({
-  //     where: { sessionId_userId: { sessionId: 10, userId: 42 } },
-  //   });
-  //   expect(participationDeleteMock).toHaveBeenCalledWith({
-  //     where: { sessionId_userId: { sessionId: 10, userId: 42 } },
-  //   });
-  //   expect(res.status).toHaveBeenCalledWith(200);
-  //   expect(res.json).toHaveBeenCalledWith({
-  //     message: "Successfully left the session",
-  //   });
-  // });
+    expect(participationFindUniqueMock).toHaveBeenCalledWith({
+      where: { sessionId_userId: { sessionId: 10, userId: 42 } },
+    });
+    expect(participationDeleteMock).toHaveBeenCalledWith({
+      where: { sessionId_userId: { sessionId: 10, userId: 42 } },
+    });
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({
+      message: "Successfully left the session",
+    });
+  });
 
   it("returns an internal server error when the lookup fails", async () => {
     const error = new Error("database unavailable");
