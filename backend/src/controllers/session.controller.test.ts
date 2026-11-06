@@ -168,6 +168,8 @@ describe("SessionController.getAll", () => {
     expect(res.json).toHaveBeenCalledWith({
       message: "Internal server error",
     });
+    expect(consoleError).toHaveBeenCalledWith("Get sessions error:", error);
+
     consoleError.mockRestore();
   });
 });
@@ -225,6 +227,8 @@ describe("SessionController.getById", () => {
     expect(res.json).toHaveBeenCalledWith({
       message: "Internal server error",
     });
+    expect(consoleError).toHaveBeenCalledWith("Get session error:", error);
+
     consoleError.mockRestore();
   });
 });
@@ -340,6 +344,8 @@ describe("SessionController.create", () => {
     expect(res.json).toHaveBeenCalledWith({
       message: "Internal server error",
     });
+    expect(consoleError).toHaveBeenCalledWith("Create session error:", error);
+
     consoleError.mockRestore();
   });
 });
@@ -399,6 +405,9 @@ describe("SessionController.update", () => {
       data: { name: "Evening Flow" },
       include: sessionInclude,
     });
+    expect(sessionUpdateMock.mock.calls[0][0].data).toStrictEqual({
+      name: "Evening Flow",
+    });
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(expectedSessionResponse());
     expect(teacherFindUniqueMock).not.toHaveBeenCalled();
@@ -430,6 +439,11 @@ describe("SessionController.update", () => {
       },
       include: sessionInclude,
     });
+    expect(sessionUpdateMock.mock.calls[0][0].data).toStrictEqual({
+      date: sessionDate,
+      description: "Updated description",
+      teacherId: 4,
+    });
   });
 
   it("returns an internal server error when the update fails", async () => {
@@ -448,6 +462,8 @@ describe("SessionController.update", () => {
     expect(res.json).toHaveBeenCalledWith({
       message: "Internal server error",
     });
+    expect(consoleError).toHaveBeenCalledWith("Update session error:", error);
+
     consoleError.mockRestore();
   });
 });
@@ -511,6 +527,8 @@ describe("SessionController.delete", () => {
     expect(res.json).toHaveBeenCalledWith({
       message: "Internal server error",
     });
+    expect(consoleError).toHaveBeenCalledWith("Delete session error:", error);
+
     consoleError.mockRestore();
   });
 });
@@ -621,6 +639,7 @@ describe("SessionController.participate", () => {
       message: "Internal server error",
     });
     expect(participationCreateMock).not.toHaveBeenCalled();
+    expect(consoleError).toHaveBeenCalledWith("Participate error:", error);
 
     consoleError.mockRestore();
   });
@@ -731,6 +750,8 @@ describe("SessionController.unparticipate", () => {
     expect(res.json).toHaveBeenCalledWith({
       message: "Internal server error",
     });
+    expect(consoleError).toHaveBeenCalledWith("Unparticipate error:", error);
+
     consoleError.mockRestore();
   });
 

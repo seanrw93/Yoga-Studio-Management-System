@@ -137,6 +137,8 @@ describe("UserController.getById", () => {
     expect(res.json).toHaveBeenCalledWith({
       message: "Internal server error",
     });
+    expect(consoleError).toHaveBeenCalledWith("Get user error:", error);
+
     consoleError.mockRestore();
   });
 });
@@ -214,6 +216,8 @@ describe("UserController.delete", () => {
     expect(res.json).toHaveBeenCalledWith({
       message: "Internal server error",
     });
+    expect(consoleError).toHaveBeenCalledWith("Delete user error:", error);
+
     consoleError.mockRestore();
   });
 
@@ -390,6 +394,8 @@ describe("UserController.promoteSelfToAdmin", () => {
     expect(res.json).toHaveBeenCalledWith({
       message: "Internal server error",
     });
+    expect(consoleError).toHaveBeenCalledWith("Promote user error:", error);
+
     consoleError.mockRestore();
   });
 
