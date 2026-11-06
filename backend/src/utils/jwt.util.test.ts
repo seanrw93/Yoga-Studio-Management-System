@@ -87,14 +87,13 @@ describe("jwt.util", () => {
 
     expect(verifyToken(token)).toBeNull();
   });
-  
+
   it("generates a token that expires after 24 hours", () => {
     const token = generateToken(42);
     const { iat, exp } = jwt.verify(token, TEST_SECRET) as jwt.JwtPayload;
 
     expect(exp! - iat!).toBe(24 * 60 * 60);
   });
-
 
   it("throws on import when JWT_SECRET is missing", async () => {
     vi.stubEnv("JWT_SECRET", "");
