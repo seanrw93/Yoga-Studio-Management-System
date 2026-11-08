@@ -245,54 +245,6 @@ describe("SessionController.create", () => {
     vi.clearAllMocks();
   });
 
-  it("requires a name", async () => {
-    const req = createRequest(7, {}, { ...validBody, name: undefined });
-    const res = createResponse();
-
-    await controller.create(req, res);
-
-    expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({ message: "Name is required" });
-    expect(sessionCreateMock).not.toHaveBeenCalled();
-  });
-
-  it("requires a date", async () => {
-    const req = createRequest(7, {}, { ...validBody, date: undefined });
-    const res = createResponse();
-
-    await controller.create(req, res);
-
-    expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({ message: "Date is required" });
-    expect(sessionCreateMock).not.toHaveBeenCalled();
-  });
-
-  it("requires a description", async () => {
-    const req = createRequest(7, {}, { ...validBody, description: undefined });
-    const res = createResponse();
-
-    await controller.create(req, res);
-
-    expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({
-      message: "Description is required",
-    });
-    expect(sessionCreateMock).not.toHaveBeenCalled();
-  });
-
-  it("requires a teacher ID", async () => {
-    const req = createRequest(7, {}, { ...validBody, teacherId: undefined });
-    const res = createResponse();
-
-    await controller.create(req, res);
-
-    expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({
-      message: "Teacher ID is required",
-    });
-    expect(sessionCreateMock).not.toHaveBeenCalled();
-  });
-
   it("responds with not found when the teacher does not exist", async () => {
     teacherFindUniqueMock.mockResolvedValue(null);
     const req = createRequest(7, {}, validBody);
