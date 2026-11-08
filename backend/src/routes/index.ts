@@ -8,6 +8,9 @@ import {
   requireAdmin,
   requireSelfOrAdmin,
 } from "../middleware/authorize.middleware";
+import { validateBody } from "../middleware/validate.middleware";
+import { LoginSchema, RegisterSchema } from "../dto/auth.dto";
+import { CreateSessionSchema, UpdateSessionSchema } from "../dto/session.dto";
 
 const router = Router();
 
@@ -18,8 +21,10 @@ const teacherController = new TeacherController();
 const userController = new UserController();
 
 // Auth routes (public)
-router.post("/api/auth/login", (req, res) => authController.login(req, res));
-router.post("/api/auth/register", (req, res) =>
+router.post("/api/auth/login", validateBody(LoginSchema), (req, res) =>
+  authController.login(req, res),
+);
+router.post("/api/auth/register", validateBody(RegisterSchema), (req, res) =>
   authController.register(req, res),
 );
 
@@ -30,11 +35,19 @@ router.get("/api/session", authMiddleware, (req, res) =>
 router.get("/api/session/:id", authMiddleware, (req, res) =>
   sessionController.getById(req, res),
 );
-router.post("/api/session", authMiddleware, requireAdmin, (req, res) =>
-  sessionController.create(req, res),
+router.post(
+  "/api/session",
+  authMiddleware,
+  requireAdmin,
+  validateBody(CreateSessionSchema),
+  (req, res) => sessionController.create(req, res),
 );
-router.put("/api/session/:id", authMiddleware, requireAdmin, (req, res) =>
-  sessionController.update(req, res),
+router.put(
+  "/api/session/:id",
+  authMiddleware,
+  requireAdmin,
+  validateBody(UpdateSessionSchema),
+  (req, res) => sessionController.update(req, res),
 );
 router.delete("/api/session/:id", authMiddleware, requireAdmin, (req, res) =>
   sessionController.delete(req, res),
