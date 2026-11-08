@@ -5,6 +5,7 @@ export default defineConfig({
     globals: true,
     environment: "node",
     fileParallelism: false,
+    exclude: ["**/node_modules/**", "**/.stryker-tmp/**"],
     env: {
       JWT_SECRET: "test-secret",
     },
