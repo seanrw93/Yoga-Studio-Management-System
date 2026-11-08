@@ -91,19 +91,6 @@ export class SessionController {
     try {
       const { name, date, description, teacherId } = req.body;
 
-      if (!name) {
-        return res.status(400).json({ message: "Name is required" });
-      }
-      if (!date) {
-        return res.status(400).json({ message: "Date is required" });
-      }
-      if (!description) {
-        return res.status(400).json({ message: "Description is required" });
-      }
-      if (!teacherId) {
-        return res.status(400).json({ message: "Teacher ID is required" });
-      }
-
       const teacher = await prisma.teacher.findUnique({
         where: { id: teacherId },
       });
@@ -166,10 +153,10 @@ export class SessionController {
       }
 
       const updateData: Prisma.SessionUncheckedUpdateInput = {};
-      if (name) updateData.name = name;
-      if (date) updateData.date = new Date(date);
-      if (description) updateData.description = description;
-      if (teacherId) {
+      if (name !== undefined) updateData.name = name;
+      if (date !== undefined) updateData.date = new Date(date);
+      if (description !== undefined) updateData.description = description;
+      if (teacherId !== undefined) {
         const teacher = await prisma.teacher.findUnique({
           where: { id: teacherId },
         });
