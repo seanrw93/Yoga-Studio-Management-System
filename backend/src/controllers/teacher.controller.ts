@@ -1,11 +1,12 @@
-import { Response } from "express";
+import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
-import { AuthRequest } from "../middleware/auth.middleware";
+import { parseId } from "../utils/parse-id.util";
+import { TeacherResponse } from "../types/teacher.types";
 
 const prisma = new PrismaClient();
 
 export class TeacherController {
-  async getAll(req: AuthRequest, res: Response) {
+  async getAll(req: Request, res: Response) {
     try {
       const teachers = await prisma.teacher.findMany({
         orderBy: {
@@ -13,32 +14,28 @@ export class TeacherController {
         },
       });
 
-      const response: any = teachers.map((teacher: any) => ({
-        id: teacher.id,
-        firstName: teacher.firstName,
-        lastName: teacher.lastName,
-        createdAt: teacher.createdAt,
-        updatedAt: teacher.updatedAt,
-      }));
+      const response: TeacherResponse[] = teachers.map(
+        (teacher: TeacherResponse) => ({
+          id: teacher.id,
+          firstName: teacher.firstName,
+          lastName: teacher.lastName,
+          createdAt: teacher.createdAt,
+          updatedAt: teacher.updatedAt,
+        }),
+      );
 
       return res.status(200).json(response);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Get teachers error:", error);
       return res.status(500).json({ message: "Internal server error" });
     }
   }
 
-  async getById(req: AuthRequest, res: Response) {
+  async getById(req: Request, res: Response) {
     try {
-      const { id } = req.params as { id: string };
+      const teacherId = parseId(req.params.id);
 
-      if (!id) {
-        return res.status(400).json({ message: "Teacher ID is required" });
-      }
-
-      const teacherId = parseInt(id);
-
-      if (isNaN(teacherId)) {
+      if (teacherId === null) {
         return res.status(400).json({ message: "Invalid teacher ID" });
       }
 
@@ -50,7 +47,7 @@ export class TeacherController {
         return res.status(404).json({ message: "Teacher not found" });
       }
 
-      const response: any = {
+      const response: TeacherResponse = {
         id: teacher.id,
         firstName: teacher.firstName,
         lastName: teacher.lastName,
@@ -59,7 +56,7 @@ export class TeacherController {
       };
 
       return res.status(200).json(response);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Get teacher error:", error);
       return res.status(500).json({ message: "Internal server error" });
     }

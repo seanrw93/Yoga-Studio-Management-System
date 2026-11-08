@@ -1,21 +1,16 @@
-import { Response } from "express";
+import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
-import { AuthRequest } from "../middleware/auth.middleware";
+import { parseId } from "../utils/parse-id.util";
+import { UserResponse } from "../types/user.types";
 
 const prisma = new PrismaClient();
 
 export class UserController {
-  async getById(req: AuthRequest, res: Response) {
+  async getById(req: Request, res: Response) {
     try {
-      const { id } = req.params as { id: string };
+      const userId = parseId(req.params.id);
 
-      if (!id) {
-        return res.status(400).json({ message: "User ID is required" });
-      }
-
-      const userId = parseInt(id);
-
-      if (isNaN(userId)) {
+      if (userId === null) {
         return res.status(400).json({ message: "Invalid user ID" });
       }
 
@@ -27,7 +22,7 @@ export class UserController {
         return res.status(404).json({ message: "User not found" });
       }
 
-      const response: any = {
+      const response: UserResponse = {
         id: user.id,
         email: user.email,
         firstName: user.firstName,
@@ -38,23 +33,17 @@ export class UserController {
       };
 
       return res.status(200).json(response);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Get user error:", error);
       return res.status(500).json({ message: "Internal server error" });
     }
   }
 
-  async delete(req: AuthRequest, res: Response) {
+  async delete(req: Request, res: Response) {
     try {
-      const { id } = req.params as { id: string };
+      const userId = parseId(req.params.id);
 
-      if (!id) {
-        return res.status(400).json({ message: "User ID is required" });
-      }
-
-      const userId = parseInt(id);
-
-      if (isNaN(userId)) {
+      if (userId === null) {
         return res.status(400).json({ message: "Invalid user ID" });
       }
 
@@ -77,16 +66,19 @@ export class UserController {
       });
 
       return res.status(200).json({ message: "User deleted successfully" });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Delete user error:", error);
       return res.status(500).json({ message: "Internal server error" });
     }
   }
 
-  async promoteSelfToAdmin(req: AuthRequest, res: Response) {
+  async promoteSelfToAdmin(req: Request, res: Response) {
     try {
-      const isDev = (process.env.NODE_ENV || "development") === "development";
-      if (!isDev) {
+      const selfPromotionEnabled =
+        process.env.NODE_ENV === "development" &&
+        process.env.ENABLE_ADMIN_SELF_PROMOTION === "true";
+
+      if (!selfPromotionEnabled) {
         return res.status(403).json({
           message: "Admin self-promotion is only available in development",
         });
@@ -105,7 +97,7 @@ export class UserController {
       }
 
       if (user.admin) {
-        return res.status(200).json({
+        const response: UserResponse = {
           id: user.id,
           email: user.email,
           firstName: user.firstName,
@@ -113,7 +105,9 @@ export class UserController {
           admin: user.admin,
           createdAt: user.createdAt,
           updatedAt: user.updatedAt,
-        });
+        };
+
+        return res.status(200).json(response);
       }
 
       const updatedUser = await prisma.user.update({
@@ -121,7 +115,7 @@ export class UserController {
         data: { admin: true },
       });
 
-      return res.status(200).json({
+      const response: UserResponse = {
         id: updatedUser.id,
         email: updatedUser.email,
         firstName: updatedUser.firstName,
@@ -129,8 +123,10 @@ export class UserController {
         admin: updatedUser.admin,
         createdAt: updatedUser.createdAt,
         updatedAt: updatedUser.updatedAt,
-      });
-    } catch (error: any) {
+      };
+
+      return res.status(200).json(response);
+    } catch (error: unknown) {
       console.error("Promote user error:", error);
       return res.status(500).json({ message: "Internal server error" });
     }

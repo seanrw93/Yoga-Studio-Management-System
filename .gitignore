@@ -42,3 +42,7 @@ logs/
 
 # Prisma
 backend/prisma/migrations/
+
+# Stryker
+.stryker-tmp/
+reports/

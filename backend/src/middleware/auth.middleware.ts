@@ -1,33 +1,37 @@
 import { Request, Response, NextFunction } from "express";
 import { verifyToken } from "../utils/jwt.util";
 
-export interface AuthRequest extends Request {
-  userId?: number;
-}
-
-export function authMiddleware(
-  req: AuthRequest,
+export const authMiddleware = (
+  req: Request,
   res: Response,
   next: NextFunction,
-) {
+): void => {
   const authHeader = req.headers.authorization;
 
-  if (!authHeader) {
-    return res.status(401).json({ message: "No token provided" });
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    res.status(401).json({ message: "Authentication required" });
+    return;
   }
 
   const token = authHeader.split(" ")[1];
 
   if (!token) {
-    return res.status(401).json({ message: "Invalid token format" });
+    res.status(401).json({ message: "Invalid token" });
+    return;
   }
 
-  const decoded: any = verifyToken(token);
+  const decoded = verifyToken(token);
 
-  if (!decoded) {
-    return res.status(401).json({ message: "Invalid or expired token" });
+  if (
+    !decoded ||
+    !Number.isSafeInteger(decoded.userId) ||
+    decoded.userId <= 0
+  ) {
+    res.status(401).json({ message: "Invalid or expired token" });
+    return;
   }
 
   req.userId = decoded.userId;
+
   next();
-}
+};
