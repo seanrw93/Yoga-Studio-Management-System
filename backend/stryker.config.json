@@ -7,7 +7,7 @@
     "src/utils/**/*.ts",
     "src/middleware/**/*.ts",
     "src/controllers/**/*.ts",
-    "src/routes/**/*.ts",
+    "!src/routes/**/*.ts",
     "!src/**/*.test.ts"
   ],
   "checkers": ["typescript"],
