@@ -1,5 +1,9 @@
 import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { PrismaClient } from "@prisma/client";
+import { PrismaClient as MockedPrismaClient } from "@prisma/client";
+import { runHandler } from "../test-utils/run-handler";
+import { UserService } from "../services/user.service";
 import { UserController } from "./user.controller";
 
 const { findUniqueMock, updateMock, deleteMock, MockPrismaClient, mockEnv } =
@@ -76,7 +80,9 @@ const createRequest = (
   } as Request;
 };
 
-const controller = new UserController();
+const controller = new UserController(
+  new UserService(new MockedPrismaClient() as unknown as PrismaClient),
+);
 
 describe("UserController.getById", () => {
   beforeEach(() => {
@@ -87,7 +93,7 @@ describe("UserController.getById", () => {
     const req = createRequest(7, { id: "12abc" });
     const res = createResponse();
 
-    await controller.getById(req, res);
+    await runHandler(controller.getById.bind(controller), req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({ message: "Invalid user ID" });
@@ -99,7 +105,7 @@ describe("UserController.getById", () => {
     const req = createRequest(7, { id: "8" });
     const res = createResponse();
 
-    await controller.getById(req, res);
+    await runHandler(controller.getById.bind(controller), req, res);
 
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.json).toHaveBeenCalledWith({ message: "User not found" });
@@ -110,7 +116,7 @@ describe("UserController.getById", () => {
     const req = createRequest(7, { id: "7" });
     const res = createResponse();
 
-    await controller.getById(req, res);
+    await runHandler(controller.getById.bind(controller), req, res);
 
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
@@ -129,7 +135,7 @@ describe("UserController.getById", () => {
     const req = createRequest(7, { id: "7" });
     const res = createResponse();
 
-    await controller.getById(req, res);
+    await runHandler(controller.getById.bind(controller), req, res);
 
     expect(res.json).toHaveBeenCalledWith(
       expect.not.objectContaining({ password: expect.anything() }),
@@ -145,13 +151,13 @@ describe("UserController.getById", () => {
     const req = createRequest(7, { id: "7" });
     const res = createResponse();
 
-    await controller.getById(req, res);
+    await runHandler(controller.getById.bind(controller), req, res);
 
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith({
       message: "Internal server error",
     });
-    expect(consoleError).toHaveBeenCalledWith("Get user error:", error);
+    expect(consoleError).toHaveBeenCalledWith("Unhandled error:", error);
 
     consoleError.mockRestore();
   });
@@ -166,7 +172,7 @@ describe("UserController.delete", () => {
     const req = createRequest(7, { id: "12abc" });
     const res = createResponse();
 
-    await controller.delete(req, res);
+    await runHandler(controller.delete.bind(controller), req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({ message: "Invalid user ID" });
@@ -178,7 +184,7 @@ describe("UserController.delete", () => {
     const req = createRequest(7, { id: "8" });
     const res = createResponse();
 
-    await controller.delete(req, res);
+    await runHandler(controller.delete.bind(controller), req, res);
 
     expect(res.status).toHaveBeenCalledWith(403);
     expect(res.json).toHaveBeenCalledWith({
@@ -194,7 +200,7 @@ describe("UserController.delete", () => {
     const req = createRequest(7, { id: "7" });
     const res = createResponse();
 
-    await controller.delete(req, res);
+    await runHandler(controller.delete.bind(controller), req, res);
 
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
@@ -207,7 +213,7 @@ describe("UserController.delete", () => {
     const req = createRequest(7, { id: "7" });
     const res = createResponse();
 
-    await controller.delete(req, res);
+    await runHandler(controller.delete.bind(controller), req, res);
 
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.json).toHaveBeenCalledWith({ message: "User not found" });
@@ -224,13 +230,13 @@ describe("UserController.delete", () => {
     const req = createRequest(7, { id: "7" });
     const res = createResponse();
 
-    await controller.delete(req, res);
+    await runHandler(controller.delete.bind(controller), req, res);
 
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith({
       message: "Internal server error",
     });
-    expect(consoleError).toHaveBeenCalledWith("Delete user error:", error);
+    expect(consoleError).toHaveBeenCalledWith("Unhandled error:", error);
 
     consoleError.mockRestore();
   });
@@ -239,7 +245,7 @@ describe("UserController.delete", () => {
     const req = createRequest(undefined, { id: "7" });
     const res = createResponse();
 
-    await controller.delete(req, res);
+    await runHandler(controller.delete.bind(controller), req, res);
 
     expect(res.status).toHaveBeenCalledWith(403);
     expect(findUniqueMock).not.toHaveBeenCalled();
@@ -250,7 +256,7 @@ describe("UserController.delete", () => {
     const req = createRequest(7, { id: "8" }, { userId: 8, id: 8 });
     const res = createResponse();
 
-    await controller.delete(req, res);
+    await runHandler(controller.delete.bind(controller), req, res);
 
     expect(res.status).toHaveBeenCalledWith(403);
     expect(deleteMock).not.toHaveBeenCalled();
@@ -269,7 +275,7 @@ describe("UserController.promoteSelfToAdmin", () => {
     const req = createRequest(7);
     const res = createResponse();
 
-    await controller.promoteSelfToAdmin(req, res);
+    await runHandler(controller.promoteSelfToAdmin.bind(controller), req, res);
 
     expect(res.status).toHaveBeenCalledWith(403);
     expect(findUniqueMock).not.toHaveBeenCalled();
@@ -281,7 +287,7 @@ describe("UserController.promoteSelfToAdmin", () => {
     const req = createRequest(7);
     const res = createResponse();
 
-    await controller.promoteSelfToAdmin(req, res);
+    await runHandler(controller.promoteSelfToAdmin.bind(controller), req, res);
 
     expect(res.status).toHaveBeenCalledWith(403);
     expect(updateMock).not.toHaveBeenCalled();
@@ -292,7 +298,7 @@ describe("UserController.promoteSelfToAdmin", () => {
     const req = createRequest(7);
     const res = createResponse();
 
-    await controller.promoteSelfToAdmin(req, res);
+    await runHandler(controller.promoteSelfToAdmin.bind(controller), req, res);
 
     expect(res.status).toHaveBeenCalledWith(403);
     expect(res.json).toHaveBeenCalledWith({
@@ -307,7 +313,7 @@ describe("UserController.promoteSelfToAdmin", () => {
     const req = createRequest(7);
     const res = createResponse();
 
-    await controller.promoteSelfToAdmin(req, res);
+    await runHandler(controller.promoteSelfToAdmin.bind(controller), req, res);
 
     expect(res.status).toHaveBeenCalledWith(403);
     expect(findUniqueMock).not.toHaveBeenCalled();
@@ -318,7 +324,7 @@ describe("UserController.promoteSelfToAdmin", () => {
     const req = createRequest();
     const res = createResponse();
 
-    await controller.promoteSelfToAdmin(req, res);
+    await runHandler(controller.promoteSelfToAdmin.bind(controller), req, res);
 
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith({ message: "Unauthorized" });
@@ -330,7 +336,7 @@ describe("UserController.promoteSelfToAdmin", () => {
     const req = createRequest(7);
     const res = createResponse();
 
-    await controller.promoteSelfToAdmin(req, res);
+    await runHandler(controller.promoteSelfToAdmin.bind(controller), req, res);
 
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.json).toHaveBeenCalledWith({ message: "User not found" });
@@ -342,7 +348,7 @@ describe("UserController.promoteSelfToAdmin", () => {
     const req = createRequest(7);
     const res = createResponse();
 
-    await controller.promoteSelfToAdmin(req, res);
+    await runHandler(controller.promoteSelfToAdmin.bind(controller), req, res);
 
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
@@ -363,7 +369,7 @@ describe("UserController.promoteSelfToAdmin", () => {
     const req = createRequest(7);
     const res = createResponse();
 
-    await controller.promoteSelfToAdmin(req, res);
+    await runHandler(controller.promoteSelfToAdmin.bind(controller), req, res);
 
     expect(updateMock).toHaveBeenCalledWith({
       where: { id: 7 },
@@ -390,13 +396,13 @@ describe("UserController.promoteSelfToAdmin", () => {
     const req = createRequest(7);
     const res = createResponse();
 
-    await controller.promoteSelfToAdmin(req, res);
+    await runHandler(controller.promoteSelfToAdmin.bind(controller), req, res);
 
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith({
       message: "Internal server error",
     });
-    expect(consoleError).toHaveBeenCalledWith("Promote user error:", error);
+    expect(consoleError).toHaveBeenCalledWith("Unhandled error:", error);
 
     consoleError.mockRestore();
   });
@@ -411,7 +417,7 @@ describe("UserController.promoteSelfToAdmin", () => {
     const req = createRequest(7);
     const res = createResponse();
 
-    await controller.promoteSelfToAdmin(req, res);
+    await runHandler(controller.promoteSelfToAdmin.bind(controller), req, res);
 
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith({

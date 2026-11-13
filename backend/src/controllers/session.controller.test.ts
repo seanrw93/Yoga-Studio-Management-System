@@ -1,5 +1,9 @@
 import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { PrismaClient } from "@prisma/client";
+import { PrismaClient as MockedPrismaClient } from "@prisma/client";
+import { runHandler } from "../test-utils/run-handler";
+import { SessionService } from "../services/session.service";
 import { SessionController } from "./session.controller";
 
 const {
@@ -85,7 +89,9 @@ const createRequest = (
   } as unknown as Request;
 };
 
-const controller = new SessionController();
+const controller = new SessionController(
+  new SessionService(new MockedPrismaClient() as unknown as PrismaClient),
+);
 
 const sessionDate = new Date("2026-03-01T10:00:00.000Z");
 const createdAt = new Date("2026-01-01T00:00:00.000Z");
@@ -136,7 +142,7 @@ describe("SessionController.getAll", () => {
     const req = createRequest(7);
     const res = createResponse();
 
-    await controller.getAll(req, res);
+    await runHandler(controller.getAll.bind(controller), req, res);
 
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith([expectedSessionResponse()]);
@@ -147,7 +153,7 @@ describe("SessionController.getAll", () => {
     const req = createRequest(7);
     const res = createResponse();
 
-    await controller.getAll(req, res);
+    await runHandler(controller.getAll.bind(controller), req, res);
 
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith([]);
@@ -162,13 +168,13 @@ describe("SessionController.getAll", () => {
     const req = createRequest(7);
     const res = createResponse();
 
-    await controller.getAll(req, res);
+    await runHandler(controller.getAll.bind(controller), req, res);
 
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith({
       message: "Internal server error",
     });
-    expect(consoleError).toHaveBeenCalledWith("Get sessions error:", error);
+    expect(consoleError).toHaveBeenCalledWith("Unhandled error:", error);
 
     consoleError.mockRestore();
   });
@@ -183,7 +189,7 @@ describe("SessionController.getById", () => {
     const req = createRequest(7, { id: "12abc" });
     const res = createResponse();
 
-    await controller.getById(req, res);
+    await runHandler(controller.getById.bind(controller), req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({ message: "Invalid session ID" });
@@ -195,7 +201,7 @@ describe("SessionController.getById", () => {
     const req = createRequest(7, { id: "10" });
     const res = createResponse();
 
-    await controller.getById(req, res);
+    await runHandler(controller.getById.bind(controller), req, res);
 
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.json).toHaveBeenCalledWith({ message: "Session not found" });
@@ -206,7 +212,7 @@ describe("SessionController.getById", () => {
     const req = createRequest(7, { id: "10" });
     const res = createResponse();
 
-    await controller.getById(req, res);
+    await runHandler(controller.getById.bind(controller), req, res);
 
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(expectedSessionResponse());
@@ -221,13 +227,13 @@ describe("SessionController.getById", () => {
     const req = createRequest(7, { id: "10" });
     const res = createResponse();
 
-    await controller.getById(req, res);
+    await runHandler(controller.getById.bind(controller), req, res);
 
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith({
       message: "Internal server error",
     });
-    expect(consoleError).toHaveBeenCalledWith("Get session error:", error);
+    expect(consoleError).toHaveBeenCalledWith("Unhandled error:", error);
 
     consoleError.mockRestore();
   });
@@ -250,7 +256,7 @@ describe("SessionController.create", () => {
     const req = createRequest(7, {}, validBody);
     const res = createResponse();
 
-    await controller.create(req, res);
+    await runHandler(controller.create.bind(controller), req, res);
 
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.json).toHaveBeenCalledWith({ message: "Teacher not found" });
@@ -259,11 +265,13 @@ describe("SessionController.create", () => {
 
   it("creates the session with the submitted values and returns it", async () => {
     teacherFindUniqueMock.mockResolvedValue({ id: 3 });
-    sessionCreateMock.mockResolvedValue(createSessionRecord());
+    sessionCreateMock.mockResolvedValue(
+      createSessionRecord({ participants: [] }),
+    );
     const req = createRequest(7, {}, validBody);
     const res = createResponse();
 
-    await controller.create(req, res);
+    await runHandler(controller.create.bind(controller), req, res);
 
     expect(sessionCreateMock).toHaveBeenCalledWith({
       data: {
@@ -272,7 +280,7 @@ describe("SessionController.create", () => {
         description: "A gentle start to the day",
         teacherId: 3,
       },
-      include: { teacher: true, participants: true },
+      include: { teacher: true, participants: { include: { user: true } } },
     });
     expect(res.status).toHaveBeenCalledWith(201);
     expect(res.json).toHaveBeenCalledWith(
@@ -290,13 +298,13 @@ describe("SessionController.create", () => {
     const req = createRequest(7, {}, validBody);
     const res = createResponse();
 
-    await controller.create(req, res);
+    await runHandler(controller.create.bind(controller), req, res);
 
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith({
       message: "Internal server error",
     });
-    expect(consoleError).toHaveBeenCalledWith("Create session error:", error);
+    expect(consoleError).toHaveBeenCalledWith("Unhandled error:", error);
 
     consoleError.mockRestore();
   });
@@ -311,7 +319,7 @@ describe("SessionController.update", () => {
     const req = createRequest(7, { id: "12abc" }, { name: "New name" });
     const res = createResponse();
 
-    await controller.update(req, res);
+    await runHandler(controller.update.bind(controller), req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({ message: "Invalid session ID" });
@@ -324,7 +332,7 @@ describe("SessionController.update", () => {
     const req = createRequest(7, { id: "10" }, { name: "New name" });
     const res = createResponse();
 
-    await controller.update(req, res);
+    await runHandler(controller.update.bind(controller), req, res);
 
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.json).toHaveBeenCalledWith({ message: "Session not found" });
@@ -337,7 +345,7 @@ describe("SessionController.update", () => {
     const req = createRequest(7, { id: "10" }, { teacherId: 99 });
     const res = createResponse();
 
-    await controller.update(req, res);
+    await runHandler(controller.update.bind(controller), req, res);
 
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.json).toHaveBeenCalledWith({ message: "Teacher not found" });
@@ -350,7 +358,7 @@ describe("SessionController.update", () => {
     const req = createRequest(7, { id: "10" }, { name: "Evening Flow" });
     const res = createResponse();
 
-    await controller.update(req, res);
+    await runHandler(controller.update.bind(controller), req, res);
 
     expect(sessionUpdateMock).toHaveBeenCalledWith({
       where: { id: 10 },
@@ -380,7 +388,7 @@ describe("SessionController.update", () => {
     );
     const res = createResponse();
 
-    await controller.update(req, res);
+    await runHandler(controller.update.bind(controller), req, res);
 
     expect(sessionUpdateMock).toHaveBeenCalledWith({
       where: { id: 10 },
@@ -408,13 +416,13 @@ describe("SessionController.update", () => {
     const req = createRequest(7, { id: "10" }, { name: "Evening Flow" });
     const res = createResponse();
 
-    await controller.update(req, res);
+    await runHandler(controller.update.bind(controller), req, res);
 
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith({
       message: "Internal server error",
     });
-    expect(consoleError).toHaveBeenCalledWith("Update session error:", error);
+    expect(consoleError).toHaveBeenCalledWith("Unhandled error:", error);
 
     consoleError.mockRestore();
   });
@@ -429,7 +437,7 @@ describe("SessionController.delete", () => {
     const req = createRequest(7, { id: "12abc" });
     const res = createResponse();
 
-    await controller.delete(req, res);
+    await runHandler(controller.delete.bind(controller), req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({ message: "Invalid session ID" });
@@ -442,7 +450,7 @@ describe("SessionController.delete", () => {
     const req = createRequest(7, { id: "10" });
     const res = createResponse();
 
-    await controller.delete(req, res);
+    await runHandler(controller.delete.bind(controller), req, res);
 
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.json).toHaveBeenCalledWith({ message: "Session not found" });
@@ -455,7 +463,7 @@ describe("SessionController.delete", () => {
     const req = createRequest(7, { id: "10" });
     const res = createResponse();
 
-    await controller.delete(req, res);
+    await runHandler(controller.delete.bind(controller), req, res);
 
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
@@ -473,13 +481,13 @@ describe("SessionController.delete", () => {
     const req = createRequest(7, { id: "10" });
     const res = createResponse();
 
-    await controller.delete(req, res);
+    await runHandler(controller.delete.bind(controller), req, res);
 
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith({
       message: "Internal server error",
     });
-    expect(consoleError).toHaveBeenCalledWith("Delete session error:", error);
+    expect(consoleError).toHaveBeenCalledWith("Unhandled error:", error);
 
     consoleError.mockRestore();
   });
@@ -494,7 +502,7 @@ describe("SessionController.participate", () => {
     const req = createRequest(undefined, { id: "10" });
     const res = createResponse();
 
-    await controller.participate(req, res);
+    await runHandler(controller.participate.bind(controller), req, res);
 
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith({
@@ -508,7 +516,7 @@ describe("SessionController.participate", () => {
     const req = createRequest(42, { id: "12abc" });
     const res = createResponse();
 
-    await controller.participate(req, res);
+    await runHandler(controller.participate.bind(controller), req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({ message: "Invalid session ID" });
@@ -521,7 +529,7 @@ describe("SessionController.participate", () => {
     const req = createRequest(42, { id: "10" });
     const res = createResponse();
 
-    await controller.participate(req, res);
+    await runHandler(controller.participate.bind(controller), req, res);
 
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.json).toHaveBeenCalledWith({ message: "Session not found" });
@@ -537,7 +545,7 @@ describe("SessionController.participate", () => {
     const req = createRequest(42, { id: "10" });
     const res = createResponse();
 
-    await controller.participate(req, res);
+    await runHandler(controller.participate.bind(controller), req, res);
 
     expect(res.status).toHaveBeenCalledWith(409);
     expect(res.json).toHaveBeenCalledWith({
@@ -558,7 +566,7 @@ describe("SessionController.participate", () => {
     );
     const res = createResponse();
 
-    await controller.participate(req, res);
+    await runHandler(controller.participate.bind(controller), req, res);
 
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
@@ -584,14 +592,14 @@ describe("SessionController.participate", () => {
     const req = createRequest(42, { id: "10" });
     const res = createResponse();
 
-    await controller.participate(req, res);
+    await runHandler(controller.participate.bind(controller), req, res);
 
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith({
       message: "Internal server error",
     });
     expect(participationCreateMock).not.toHaveBeenCalled();
-    expect(consoleError).toHaveBeenCalledWith("Participate error:", error);
+    expect(consoleError).toHaveBeenCalledWith("Unhandled error:", error);
 
     consoleError.mockRestore();
   });
@@ -606,7 +614,7 @@ describe("SessionController.participate", () => {
     const req = createRequest(42, { id: "10" });
     const res = createResponse();
 
-    await controller.participate(req, res);
+    await runHandler(controller.participate.bind(controller), req, res);
 
     expect(res.status).toHaveBeenCalledWith(500);
 
@@ -623,7 +631,7 @@ describe("SessionController.unparticipate", () => {
     const req = createRequest(42, { id: "12abc" });
     const res = createResponse();
 
-    await controller.unparticipate(req, res);
+    await runHandler(controller.unparticipate.bind(controller), req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({ message: "Invalid session ID" });
@@ -635,7 +643,7 @@ describe("SessionController.unparticipate", () => {
     const req = createRequest(undefined, { id: "10" });
     const res = createResponse();
 
-    await controller.unparticipate(req, res);
+    await runHandler(controller.unparticipate.bind(controller), req, res);
 
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith({
@@ -650,7 +658,7 @@ describe("SessionController.unparticipate", () => {
     const req = createRequest(42, { id: "10" });
     const res = createResponse();
 
-    await controller.unparticipate(req, res);
+    await runHandler(controller.unparticipate.bind(controller), req, res);
 
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.json).toHaveBeenCalledWith({
@@ -673,7 +681,7 @@ describe("SessionController.unparticipate", () => {
     );
     const res = createResponse();
 
-    await controller.unparticipate(req, res);
+    await runHandler(controller.unparticipate.bind(controller), req, res);
 
     expect(participationFindUniqueMock).toHaveBeenCalledWith({
       where: { sessionId_userId: { sessionId: 10, userId: 42 } },
@@ -696,13 +704,13 @@ describe("SessionController.unparticipate", () => {
     const req = createRequest(42, { id: "10" });
     const res = createResponse();
 
-    await controller.unparticipate(req, res);
+    await runHandler(controller.unparticipate.bind(controller), req, res);
 
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith({
       message: "Internal server error",
     });
-    expect(consoleError).toHaveBeenCalledWith("Unparticipate error:", error);
+    expect(consoleError).toHaveBeenCalledWith("Unhandled error:", error);
 
     consoleError.mockRestore();
   });
@@ -719,7 +727,7 @@ describe("SessionController.unparticipate", () => {
     const req = createRequest(42, { id: "10" });
     const res = createResponse();
 
-    await controller.unparticipate(req, res);
+    await runHandler(controller.unparticipate.bind(controller), req, res);
 
     expect(res.status).toHaveBeenCalledWith(500);
 
