@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import { parseId } from "../utils/parse-id.util";
 import { UserResponse } from "../types/user.types";
+import { env } from "../config/env";
 
 const prisma = new PrismaClient();
 
@@ -75,8 +76,8 @@ export class UserController {
   async promoteSelfToAdmin(req: Request, res: Response) {
     try {
       const selfPromotionEnabled =
-        process.env.NODE_ENV === "development" &&
-        process.env.ENABLE_ADMIN_SELF_PROMOTION === "true";
+        env.NODE_ENV === "development" &&
+        env.ENABLE_ADMIN_SELF_PROMOTION === "true";
 
       if (!selfPromotionEnabled) {
         return res.status(403).json({

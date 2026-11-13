@@ -1,7 +1,8 @@
 import jwt from "jsonwebtoken";
 import type { AuthTokenPayload } from "../types/jwt.types";
+import { env } from "../config/env";
 
-const JWT_SECRET = process.env.JWT_SECRET || "";
+const JWT_SECRET = env.JWT_SECRET || "";
 
 if (!JWT_SECRET) {
   throw new Error("JWT_SECRET must be configured");

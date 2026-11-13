@@ -42,4 +42,31 @@ describe("app", () => {
       message: "Authentication required",
     });
   });
+
+  it("allows requests from the configured frontend origin", async () => {
+    const response = await fetch(`${baseUrl}/api/health`, {
+      headers: {
+        Origin: "http://localhost:5173",
+      },
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("access-control-allow-origin")).toBe(
+      "http://localhost:5173",
+    );
+    expect(response.headers.get("access-control-allow-credentials")).toBe(
+      "true",
+    );
+  });
+
+  it("does not allow requests from an unconfigured origin", async () => {
+    const response = await fetch(`${baseUrl}/api/health`, {
+      headers: {
+        Origin: "http://malicious.example.com",
+      },
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("access-control-allow-origin")).toBeNull();
+  });
 });

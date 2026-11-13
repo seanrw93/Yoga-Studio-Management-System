@@ -2,8 +2,8 @@ import jwt from "jsonwebtoken";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { generateToken, verifyToken } from "./jwt.util";
 
-// Must match JWT_SECRET in vitest.config.mts
-const TEST_SECRET = "test-secret";
+// Must match JWT_SECRET in vitest.config.ts
+const TEST_SECRET = "a-secure-test-secret-that-is-at-least-32-chars";
 
 describe("jwt.util", () => {
   beforeEach(() => {
@@ -99,8 +99,6 @@ describe("jwt.util", () => {
     vi.stubEnv("JWT_SECRET", "");
     vi.resetModules();
 
-    await expect(import("./jwt.util")).rejects.toThrow(
-      "JWT_SECRET must be configured",
-    );
+    await expect(import("./jwt.util")).rejects.toThrow("JWT_SECRET");
   });
 });

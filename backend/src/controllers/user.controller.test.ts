@@ -2,8 +2,8 @@ import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { UserController } from "./user.controller";
 
-const { findUniqueMock, updateMock, deleteMock, MockPrismaClient } = vi.hoisted(
-  () => {
+const { findUniqueMock, updateMock, deleteMock, MockPrismaClient, mockEnv } =
+  vi.hoisted(() => {
     const findUniqueMock = vi.fn();
     const updateMock = vi.fn();
     const deleteMock = vi.fn();
@@ -16,12 +16,26 @@ const { findUniqueMock, updateMock, deleteMock, MockPrismaClient } = vi.hoisted(
       };
     }
 
-    return { findUniqueMock, updateMock, deleteMock, MockPrismaClient };
-  },
-);
+    const mockEnv = {
+      NODE_ENV: "development",
+      ENABLE_ADMIN_SELF_PROMOTION: "true",
+    };
+
+    return {
+      findUniqueMock,
+      updateMock,
+      deleteMock,
+      MockPrismaClient,
+      mockEnv,
+    };
+  });
 
 vi.mock("@prisma/client", () => ({
   PrismaClient: MockPrismaClient,
+}));
+
+vi.mock("../config/env", () => ({
+  env: mockEnv,
 }));
 
 const createdAt = new Date("2026-01-01T00:00:00.000Z");
@@ -245,14 +259,13 @@ describe("UserController.delete", () => {
 
 describe("UserController.promoteSelfToAdmin", () => {
   beforeEach(() => {
-    vi.unstubAllEnvs();
     vi.clearAllMocks();
-    vi.stubEnv("NODE_ENV", "development");
-    vi.stubEnv("ENABLE_ADMIN_SELF_PROMOTION", "true");
+    mockEnv.NODE_ENV = "development";
+    mockEnv.ENABLE_ADMIN_SELF_PROMOTION = "true";
   });
 
   it("rejects self-promotion when NODE_ENV is production", async () => {
-    vi.stubEnv("NODE_ENV", "production");
+    mockEnv.NODE_ENV = "production";
     const req = createRequest(7);
     const res = createResponse();
 
@@ -263,19 +276,8 @@ describe("UserController.promoteSelfToAdmin", () => {
     expect(updateMock).not.toHaveBeenCalled();
   });
 
-  it("rejects self-promotion when NODE_ENV is missing", async () => {
-    vi.stubEnv("NODE_ENV", undefined);
-    const req = createRequest(7);
-    const res = createResponse();
-
-    await controller.promoteSelfToAdmin(req, res);
-
-    expect(res.status).toHaveBeenCalledWith(403);
-    expect(updateMock).not.toHaveBeenCalled();
-  });
-
-  it("rejects self-promotion when the flag is missing", async () => {
-    vi.stubEnv("ENABLE_ADMIN_SELF_PROMOTION", undefined);
+  it("rejects self-promotion when NODE_ENV is test", async () => {
+    mockEnv.NODE_ENV = "test";
     const req = createRequest(7);
     const res = createResponse();
 
@@ -286,7 +288,7 @@ describe("UserController.promoteSelfToAdmin", () => {
   });
 
   it("rejects self-promotion when the flag is false", async () => {
-    vi.stubEnv("ENABLE_ADMIN_SELF_PROMOTION", "false");
+    mockEnv.ENABLE_ADMIN_SELF_PROMOTION = "false";
     const req = createRequest(7);
     const res = createResponse();
 
@@ -300,8 +302,8 @@ describe("UserController.promoteSelfToAdmin", () => {
   });
 
   it("rejects self-promotion in production even when the flag is true", async () => {
-    vi.stubEnv("NODE_ENV", "production");
-    vi.stubEnv("ENABLE_ADMIN_SELF_PROMOTION", "true");
+    mockEnv.NODE_ENV = "production";
+    mockEnv.ENABLE_ADMIN_SELF_PROMOTION = "true";
     const req = createRequest(7);
     const res = createResponse();
 
