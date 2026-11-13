@@ -7,7 +7,12 @@ export default defineConfig({
     fileParallelism: false,
     exclude: ["**/node_modules/**", "**/.stryker-tmp/**"],
     env: {
-      JWT_SECRET: "test-secret",
+      NODE_ENV: "test",
+      PORT: "8080",
+      DATABASE_URL: "postgresql://test:test@localhost:5432/test",
+      JWT_SECRET: "a-secure-test-secret-that-is-at-least-32-chars",
+      CORS_ORIGIN: "http://localhost:5173",
+      ENABLE_ADMIN_SELF_PROMOTION: "false",
     },
   },
 });
