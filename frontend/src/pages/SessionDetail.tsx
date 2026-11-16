@@ -1,17 +1,16 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import api from "../services/api";
-import { authService } from "../services/auth.service";
+import { apiPrivate } from "../services/api";
 import { Session } from "../types";
+import { useAuth } from "../context/AuthProvider";
 
 function SessionDetail() {
+  const { user, token } = useAuth();
   const { id } = useParams();
   const navigate = useNavigate();
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState<any>(true);
   const [error, setError] = useState<any>("");
-  const user = authService.getCurrentUser();
-  const token = authService.getToken();
 
   useEffect(() => {
     fetchSession();
@@ -20,7 +19,7 @@ function SessionDetail() {
   const fetchSession = async (): Promise<any> => {
     try {
       setLoading(true);
-      const response = await api.get<Session>(`/session/${id}`, {
+      const response = await apiPrivate.get<Session>(`/session/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -36,8 +35,8 @@ function SessionDetail() {
 
   const handleParticipate = async (): Promise<any> => {
     try {
-      await api.post(
-        `/session/${id}/participate/${user.id}`,
+      await apiPrivate.post(
+        `/session/${id}/participate/${user?.id}`,
         {},
         {
           headers: {
@@ -54,7 +53,7 @@ function SessionDetail() {
 
   const handleUnparticipate = async (): Promise<any> => {
     try {
-      await api.delete(`/session/${id}/participate/${user.id}`, {
+      await apiPrivate.delete(`/session/${id}/participate/${user?.id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -72,7 +71,7 @@ function SessionDetail() {
     }
 
     try {
-      await api.delete(`/session/${id}`, {
+      await apiPrivate.delete(`/session/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -102,7 +101,7 @@ function SessionDetail() {
     );
   }
 
-  const isParticipating = session.users.includes(user.id);
+  const isParticipating = session.users.includes(user?.id);
 
   return (
     <div className="min-h-screen bg-gray-100 py-8">
@@ -146,7 +145,7 @@ function SessionDetail() {
           </div>
 
           <div className="flex space-x-4">
-            {user.admin ? (
+            {user?.admin ? (
               <>
                 <button
                   onClick={() => navigate(`/sessions/edit/${id}`)}

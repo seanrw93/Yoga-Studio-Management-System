@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import api from "../services/api";
-import { authService } from "../services/auth.service";
+import { apiPrivate } from "../services/api";
 import { Teacher, Session } from "../types";
+import { useAuth } from "../context/AuthProvider";
 
 function SessionForm() {
+  const { user, token } = useAuth();
   const navigate = useNavigate();
   const { id } = useParams();
   const isEditMode = !!id;
@@ -18,12 +19,10 @@ function SessionForm() {
   const [teachers, setTeachers] = useState<any>([]);
   const [loading, setLoading] = useState<any>(false);
   const [error, setError] = useState<any>("");
-  const user = authService.getCurrentUser();
-  const token = authService.getToken();
 
   // Redirect if not admin
   useEffect(() => {
-    if (!user || !user.admin) {
+    if (!user?.admin) {
       navigate("/sessions");
     }
   }, [user, navigate]);
@@ -37,7 +36,7 @@ function SessionForm() {
 
   const fetchTeachers = async (): Promise<any> => {
     try {
-      const response = await api.get<Teacher[]>("/teacher", {
+      const response = await apiPrivate.get<Teacher[]>("/teacher", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -50,7 +49,7 @@ function SessionForm() {
 
   const fetchSession = async (): Promise<any> => {
     try {
-      const response = await api.get<Session>(`/session/${id}`, {
+      const response = await apiPrivate.get<Session>(`/session/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -84,13 +83,13 @@ function SessionForm() {
 
     try {
       if (isEditMode) {
-        await api.put(`/session/${id}`, formData, {
+        await apiPrivate.put(`/session/${id}`, formData, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
       } else {
-        await api.post("/session", formData, {
+        await apiPrivate.post("/session", formData, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
