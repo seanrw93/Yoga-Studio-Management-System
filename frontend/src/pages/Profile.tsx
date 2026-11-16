@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../services/api";
+import { isAxiosError } from "axios";
+import { useAuth } from "../context/AuthProvider";
 import { authService } from "../services/auth.service";
+import { apiPrivate } from "../services/api";
 
 function Profile() {
   const navigate = useNavigate();
@@ -10,9 +12,9 @@ function Profile() {
   const [error, setError] = useState<any>("");
   const [promoteLoading, setPromoteLoading] = useState<any>(false);
   const [promoteError, setPromoteError] = useState<any>("");
-  const user = authService.getCurrentUser();
-  const token = authService.getToken();
   const isDev = (import.meta as any).env?.DEV === true;
+
+  const { user, token, logout } = useAuth();
 
   useEffect(() => {
     if (user) {
@@ -23,14 +25,18 @@ function Profile() {
   const fetchUserInfo = async (): Promise<any> => {
     try {
       setLoading(true);
-      const response = await api.get(`/user/${user.id}`, {
+      const response = await apiPrivate.get(`/user/${user?.id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
       setUserInfo(response.data);
-    } catch (err: any) {
-      setError("Failed to load user information");
+    } catch (err: unknown) {
+      setError(
+        isAxiosError(err)
+          ? (err.response?.data?.message ?? "Login failed")
+          : "Login failed",
+      );
       console.error(err);
     } finally {
       setLoading(false);
@@ -47,12 +53,12 @@ function Profile() {
     }
 
     try {
-      await api.delete(`/user/${user.id}`, {
+      await apiPrivate.delete(`/user/${user?.id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      authService.logout();
+      logout();
       navigate("/login");
     } catch (err: any) {
       alert("Failed to delete account");
@@ -60,11 +66,11 @@ function Profile() {
     }
   };
 
-  const handlePromoteAdmin = async (): Promise<any> => {
+  const handlePromoteAdmin = async (): Promise<void> => {
     try {
       setPromoteError("");
       setPromoteLoading(true);
-      const response = await api.post(
+      const response = await apiPrivate.post(
         "/user/promote-admin",
         {},
         {

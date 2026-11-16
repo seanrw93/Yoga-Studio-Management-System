@@ -11,10 +11,10 @@ import Sessions from "./pages/Sessions";
 import SessionDetail from "./pages/SessionDetail";
 import SessionForm from "./pages/SessionForm";
 import Profile from "./pages/Profile";
-import { authService } from "./services/auth.service";
+import { useAuth } from "./context/AuthProvider";
 
-function PrivateRoute({ children }: any) {
-  const isAuthenticated = authService.isAuthenticated();
+function PrivateRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated } = useAuth();
   return isAuthenticated ? children : <Navigate to="/login" />;
 }
 

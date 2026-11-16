@@ -1,11 +1,11 @@
-import tseslint from 'typescript-eslint';
+import tseslint from "typescript-eslint";
 
 export default tseslint.config(
   {
-    ignores: ['dist/**', 'node_modules/**', 'coverage/**'],
+    ignores: ["dist/**", "node_modules/**", "coverage/**"],
   },
   {
-    files: ['src/**/*.{ts,tsx}'],
+    files: ["src/**/*.{ts,tsx}"],
     extends: [tseslint.configs.base],
     languageOptions: {
       parserOptions: {
@@ -14,16 +14,19 @@ export default tseslint.config(
         },
       },
       globals: {
-        alert: 'readonly',
-        console: 'readonly',
-        document: 'readonly',
-        localStorage: 'readonly',
-        window: 'readonly',
+        alert: "readonly",
+        console: "readonly",
+        document: "readonly",
+        localStorage: "readonly",
+        window: "readonly",
       },
     },
     rules: {
-      '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { argsIgnorePattern: "^_" },
+      ],
     },
   },
 );

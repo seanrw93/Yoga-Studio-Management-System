@@ -1,15 +1,14 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import api from "../services/api";
-import { authService } from "../services/auth.service";
+import { apiPrivate } from "../services/api";
 import { Session } from "../types";
+import { useAuth } from "../context/AuthProvider";
 
 function Sessions() {
   const [sessions, setSessions] = useState<any>([]);
   const [loading, setLoading] = useState<any>(true);
   const [error, setError] = useState<any>("");
-  const user = authService.getCurrentUser();
-  const token = authService.getToken();
+  const { user, token } = useAuth();
 
   useEffect(() => {
     fetchSessions();
@@ -18,7 +17,7 @@ function Sessions() {
   const fetchSessions = async (): Promise<any> => {
     try {
       setLoading(true);
-      const response = await api.get<Session[]>("/session", {
+      const response = await apiPrivate.get<Session[]>("/session", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -38,7 +37,7 @@ function Sessions() {
     }
 
     try {
-      await api.delete(`/session/${sessionId}`, {
+      await apiPrivate.delete(`/session/${sessionId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -63,6 +62,16 @@ function Sessions() {
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
           {error}
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !sessions) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          {error || "Session not found"}
         </div>
       </div>
     );

@@ -1,9 +1,12 @@
-import api from "./api";
-import { AuthResponse, LoginCredentials, RegisterData } from "../types";
+import { apiPublic } from "./api";
+import { AuthResponse, LoginCredentials, RegisterData, User } from "../types";
 
 export const authService = {
-  login: async (credentials: LoginCredentials): Promise<any> => {
-    const response = await api.post<AuthResponse>("/auth/login", credentials);
+  login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
+    const response = await apiPublic.post<AuthResponse>(
+      "/auth/login",
+      credentials,
+    );
     if (response.data.token) {
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("user", JSON.stringify(response.data));
@@ -11,8 +14,8 @@ export const authService = {
     return response.data;
   },
 
-  register: async (data: RegisterData): Promise<any> => {
-    const response = await api.post<AuthResponse>("/auth/register", data);
+  register: async (data: RegisterData): Promise<AuthResponse> => {
+    const response = await apiPublic.post<AuthResponse>("/auth/register", data);
     if (response.data.token) {
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("user", JSON.stringify(response.data));
@@ -25,7 +28,7 @@ export const authService = {
     localStorage.removeItem("user");
   },
 
-  getCurrentUser: (): any => {
+  getCurrentUser: (): User | null => {
     const userStr = localStorage.getItem("user");
     if (userStr) {
       return JSON.parse(userStr);
