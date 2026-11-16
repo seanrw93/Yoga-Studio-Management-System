@@ -13,7 +13,7 @@ import SessionForm from "./pages/SessionForm";
 import Profile from "./pages/Profile";
 import { useAuth } from "./context/AuthProvider";
 
-function PrivateRoute({ children }: { children: React.ReactNode}) {
+function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
   return isAuthenticated ? children : <Navigate to="/login" />;
 }
