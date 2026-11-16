@@ -1,35 +1,41 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { authService } from "../services/auth.service";
+import { isAxiosError } from "axios";
+import { useAuth } from "../context/AuthProvider";
+import { RegisterData } from "../types";
 
 function Register() {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState<any>({
+  const { register } = useAuth();
+  const [formData, setFormData] = useState<RegisterData>({
     email: "",
     password: "",
     firstName: "",
     lastName: "",
   });
-  const [error, setError] = useState<any>("");
-  const [loading, setLoading] = useState<any>(false);
+  const [error, setError] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
 
-  const handleChange = (e: any): any => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ): void => {
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleSubmit = async (e: any): Promise<any> => {
+  const handleSubmit = async (e: React.SubmitEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
     try {
-      await authService.register(formData);
+      await register(formData);
       navigate("/sessions");
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Registration failed");
+    } catch (err: unknown) {
+      setError(
+        isAxiosError(err)
+          ? (err.response?.data?.message ?? "Registration failed")
+          : "Registration failed",
+      );
     } finally {
       setLoading(false);
     }
