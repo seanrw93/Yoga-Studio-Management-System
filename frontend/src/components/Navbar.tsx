@@ -1,13 +1,11 @@
 import { Link, useNavigate } from "react-router-dom";
-import { authService } from "../services/auth.service";
-
+import { useAuth } from "../context/AuthProvider"
 function Navbar() {
   const navigate = useNavigate();
-  const user = authService.getCurrentUser();
-  const isAuthenticated = authService.isAuthenticated();
+  const { user, isAuthenticated, logout } = useAuth();
 
-  const handleLogout = (): any => {
-    authService.logout();
+  const handleLogout = (): void => {
+    logout();
     navigate("/login");
   };
 
@@ -25,7 +23,7 @@ function Navbar() {
                 <Link to="/sessions" className="hover:text-indigo-200">
                   Sessions
                 </Link>
-                {user && user.admin ? (
+                {user?.admin ? (
                   <Link to="/sessions/create" className="hover:text-indigo-200">
                     Create Session
                   </Link>
