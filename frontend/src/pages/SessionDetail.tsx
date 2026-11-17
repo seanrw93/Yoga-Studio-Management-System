@@ -1,84 +1,75 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { apiPrivate } from "../services/api";
+import { isCancel } from "axios";
+import { sessionService } from "../services/sessions.service";
 import { Session } from "../types";
 import { useAuth } from "../context/AuthProvider";
+import { getErrorMessage } from "../utils/errors";
 
 function SessionDetail() {
-  const { user, token } = useAuth();
+  const { user } = useAuth();
   const { id } = useParams();
+  const sessionId = Number(id);
   const navigate = useNavigate();
-  const [session, setSession] = useState<any>(null);
-  const [loading, setLoading] = useState<any>(true);
-  const [error, setError] = useState<any>("");
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  // Bump to refetch after joining/leaving
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
-    fetchSession();
-  }, [id]);
+    const controller = new AbortController();
 
-  const fetchSession = async (): Promise<any> => {
-    try {
-      setLoading(true);
-      const response = await apiPrivate.get<Session>(`/session/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setSession(response.data);
-    } catch (err: any) {
-      setError("Failed to load session details");
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    const load = async (): Promise<void> => {
+      try {
+        setLoading(true);
+        setError("");
+        setSession(await sessionService.getById(sessionId, controller.signal));
+      } catch (err: unknown) {
+        if (isCancel(err)) return;
+        setError(getErrorMessage(err, "Failed to load session details"));
+        console.error(err);
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
+      }
+    };
 
-  const handleParticipate = async (): Promise<any> => {
+    load();
+    return () => controller.abort();
+  }, [sessionId, reloadKey]);
+
+  const handleParticipate = async (): Promise<void> => {
+    if (!user) return;
     try {
-      await apiPrivate.post(
-        `/session/${id}/participate/${user?.id}`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-      fetchSession();
-    } catch (err: any) {
-      alert("Failed to join session");
+      await sessionService.participate(sessionId);
+      setReloadKey((k) => k + 1);
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, "Failed to join session"));
       console.error(err);
     }
   };
 
-  const handleUnparticipate = async (): Promise<any> => {
+  const handleUnparticipate = async (): Promise<void> => {
+    if (!user) return;
     try {
-      await apiPrivate.delete(`/session/${id}/participate/${user?.id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      fetchSession();
-    } catch (err: any) {
-      alert("Failed to leave session");
+      await sessionService.unparticipate(sessionId);
+      setReloadKey((k) => k + 1);
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, "Failed to leave session"));
       console.error(err);
     }
   };
 
-  const handleDelete = async (): Promise<any> => {
+  const handleDelete = async (): Promise<void> => {
     if (!window.confirm("Are you sure you want to delete this session?")) {
       return;
     }
 
     try {
-      await apiPrivate.delete(`/session/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      await sessionService.delete(sessionId);
       navigate("/sessions");
-    } catch (err: any) {
-      alert("Failed to delete session");
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, "Failed to delete session"));
       console.error(err);
     }
   };
@@ -101,7 +92,7 @@ function SessionDetail() {
     );
   }
 
-  const isParticipating = session.users.includes(user?.id);
+  const isParticipating = user ? session.users.includes(user.id) : false;
 
   return (
     <div className="min-h-screen bg-gray-100 py-8">

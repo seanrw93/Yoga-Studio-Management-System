@@ -1,50 +1,48 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { apiPrivate } from "../services/api";
+import { isCancel } from "axios";
+import { sessionService } from "../services/sessions.service";
 import { Session } from "../types";
 import { useAuth } from "../context/AuthProvider";
+import { getErrorMessage } from "../utils/errors";
 
 function Sessions() {
-  const [sessions, setSessions] = useState<any>([]);
-  const [loading, setLoading] = useState<any>(true);
-  const [error, setError] = useState<any>("");
-  const { user, token } = useAuth();
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const { user } = useAuth();
 
   useEffect(() => {
-    fetchSessions();
+    const controller = new AbortController();
+
+    const load = async (): Promise<void> => {
+      try {
+        setLoading(true);
+        setError("");
+        setSessions(await sessionService.getAll(controller.signal));
+      } catch (err: unknown) {
+        if (isCancel(err)) return;
+        setError(getErrorMessage(err, "Failed to load sessions"));
+        console.error(err);
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
+      }
+    };
+
+    load();
+    return () => controller.abort();
   }, []);
 
-  const fetchSessions = async (): Promise<any> => {
-    try {
-      setLoading(true);
-      const response = await apiPrivate.get<Session[]>("/session", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setSessions(response.data);
-    } catch (err: any) {
-      setError("Failed to load sessions");
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDelete = async (sessionId: any): Promise<any> => {
+  const handleDelete = async (sessionId: number): Promise<void> => {
     if (!window.confirm("Are you sure you want to delete this session?")) {
       return;
     }
 
     try {
-      await apiPrivate.delete(`/session/${sessionId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      fetchSessions();
-    } catch (err: any) {
-      alert("Failed to delete session");
+      await sessionService.delete(sessionId);
+      setSessions((prev) => prev.filter((s) => s.id !== sessionId));
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, "Failed to delete session"));
       console.error(err);
     }
   };
@@ -62,16 +60,6 @@ function Sessions() {
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
           {error}
-        </div>
-      </div>
-    );
-  }
-
-  if (error || !sessions) {
-    return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-          {error || "Session not found"}
         </div>
       </div>
     );
@@ -98,7 +86,7 @@ function Sessions() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {sessions.map((session: any) => (
+            {sessions.map((session) => (
               <div
                 key={session.id}
                 className="bg-white rounded-lg shadow-md p-6"

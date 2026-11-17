@@ -1,49 +1,48 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { isAxiosError } from "axios";
+import { isCancel } from "axios";
 import { useAuth } from "../context/AuthProvider";
 import { authService } from "../services/auth.service";
-import { apiPrivate } from "../services/api";
+import { userService } from "../services/user.service";
+import { User } from "../types";
+import { getErrorMessage } from "../utils/errors";
 
 function Profile() {
   const navigate = useNavigate();
-  const [userInfo, setUserInfo] = useState<any>(null);
-  const [loading, setLoading] = useState<any>(true);
-  const [error, setError] = useState<any>("");
-  const [promoteLoading, setPromoteLoading] = useState<any>(false);
-  const [promoteError, setPromoteError] = useState<any>("");
+  const [userInfo, setUserInfo] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [promoteLoading, setPromoteLoading] = useState(false);
+  const [promoteError, setPromoteError] = useState("");
   const isDev = (import.meta as any).env?.DEV === true;
 
-  const { user, token, logout } = useAuth();
+  const { user, logout } = useAuth();
+  const userId = user?.id;
 
   useEffect(() => {
-    if (user) {
-      fetchUserInfo();
-    }
-  }, []);
+    if (userId === undefined) return;
+    const controller = new AbortController();
 
-  const fetchUserInfo = async (): Promise<any> => {
-    try {
-      setLoading(true);
-      const response = await apiPrivate.get(`/user/${user?.id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setUserInfo(response.data);
-    } catch (err: unknown) {
-      setError(
-        isAxiosError(err)
-          ? (err.response?.data?.message ?? "Login failed")
-          : "Login failed",
-      );
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    const load = async (): Promise<void> => {
+      try {
+        setLoading(true);
+        setError("");
+        setUserInfo(await userService.getById(userId, controller.signal));
+      } catch (err: unknown) {
+        if (isCancel(err)) return;
+        setError(getErrorMessage(err, "Failed to load profile"));
+        console.error(err);
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
+      }
+    };
 
-  const handleDeleteAccount = async (): Promise<any> => {
+    load();
+    return () => controller.abort();
+  }, [userId]);
+
+  const handleDeleteAccount = async (): Promise<void> => {
+    if (userId === undefined) return;
     if (
       !window.confirm(
         "Are you sure you want to delete your account? This action cannot be undone.",
@@ -53,15 +52,11 @@ function Profile() {
     }
 
     try {
-      await apiPrivate.delete(`/user/${user?.id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      await userService.delete(userId);
       logout();
       navigate("/login");
-    } catch (err: any) {
-      alert("Failed to delete account");
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, "Failed to delete account"));
       console.error(err);
     }
   };
@@ -70,19 +65,11 @@ function Profile() {
     try {
       setPromoteError("");
       setPromoteLoading(true);
-      const response = await apiPrivate.post(
-        "/user/promote-admin",
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-      setUserInfo(response.data);
-      authService.updateCurrentUser({ admin: response.data.admin });
-    } catch (err: any) {
-      setPromoteError("Failed to promote to admin");
+      const updated = await userService.promoteToAdmin();
+      setUserInfo(updated);
+      authService.updateCurrentUser({ admin: updated.admin });
+    } catch (err: unknown) {
+      setPromoteError(getErrorMessage(err, "Failed to promote to admin"));
       console.error(err);
     } finally {
       setPromoteLoading(false);
@@ -173,11 +160,13 @@ function Profile() {
                 Member Since
               </span>
               <p className="text-lg text-gray-800">
-                {new Date(userInfo.createdAt).toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
+                {userInfo.createdAt
+                  ? new Date(userInfo.createdAt).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })
+                  : "—"}
               </p>
             </div>
           </div>
