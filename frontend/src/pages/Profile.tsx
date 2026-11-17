@@ -14,7 +14,7 @@ function Profile() {
   const [error, setError] = useState("");
   const [promoteLoading, setPromoteLoading] = useState(false);
   const [promoteError, setPromoteError] = useState("");
-  const isDev = (import.meta as any).env?.DEV === true;
+  const isDev = import.meta.env.DEV;
 
   const { user, logout } = useAuth();
   const userId = user?.id;
