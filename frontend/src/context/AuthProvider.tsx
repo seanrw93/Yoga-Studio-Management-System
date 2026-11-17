@@ -24,29 +24,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(authService.getCurrentUser());
   const [token, setToken] = useState<string | null>(authService.getToken());
 
-  const login = useCallback(
-    async (loginCredentials: LoginCredentials) => {
-      const res = await authService?.login(loginCredentials);
-      setUser(res);
-      setToken(res.token);
-    },
-    [token, user],
-  );
+  const login = useCallback(async (loginCredentials: LoginCredentials) => {
+    const res = await authService.login(loginCredentials);
+    setUser(res);
+    setToken(res.token);
+  }, []);
 
-  const register = useCallback(
-    async (registerData: RegisterData) => {
-      const res = await authService?.register(registerData);
-      setUser(res);
-      setToken(res.token);
-    },
-    [user, token],
-  );
+  const register = useCallback(async (registerData: RegisterData) => {
+    const res = await authService.register(registerData);
+    setUser(res);
+    setToken(res.token);
+  }, []);
 
   const logout = useCallback(() => {
     authService.logout();
     setUser(null);
     setToken(null);
-  }, [user, token]);
+  }, []);
 
   const value = useMemo(
     () => ({

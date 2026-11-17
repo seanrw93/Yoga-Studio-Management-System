@@ -27,12 +27,9 @@ export interface Session {
   updatedAt?: string;
 }
 
-export interface AuthResponse {
-  id: number;
-  email: string;
-  firstName: string;
-  lastName: string;
-  admin: boolean;
+export type AuthUser = Omit<User, "createdAt" | "updatedAt">;
+
+export interface AuthResponse extends AuthUser {
   token: string;
 }
 

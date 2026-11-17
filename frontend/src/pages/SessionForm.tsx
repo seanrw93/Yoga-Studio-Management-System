@@ -84,7 +84,9 @@ function SessionForm() {
     }));
   };
 
-  const handleSubmit = async (e: React.SubmitEvent): Promise<void> => {
+  const handleSubmit = async (
+    e: React.FormEvent<HTMLFormElement>,
+  ): Promise<void> => {
     e.preventDefault();
     if (formData.teacherId === "") return;
 
