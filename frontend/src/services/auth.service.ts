@@ -6,6 +6,49 @@ import type {
   User,
 } from "../types";
 
+const isUser = (value: unknown): value is User => {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  const user = value as Record<string, unknown>;
+
+  return (
+    Number.isInteger(user.id) &&
+    typeof user.email === "string" &&
+    typeof user.firstName === "string" &&
+    typeof user.lastName === "string" &&
+    typeof user.admin === "boolean"
+  );
+};
+
+const getStoredUser = (): User | null => {
+  const userStr = localStorage.getItem("user");
+
+  if (!userStr) {
+    return null;
+  }
+
+  try {
+    const parsed: unknown = JSON.parse(userStr);
+
+    if (!isUser(parsed)) {
+      localStorage.removeItem("user");
+      return null;
+    }
+
+    return parsed;
+  } catch {
+    localStorage.removeItem("user");
+    return null;
+  }
+};
+
+const persistAuth = ({ token, ...user }: AuthResponse): void => {
+  localStorage.setItem("token", token);
+  localStorage.setItem("user", JSON.stringify(user));
+};
+
 export const authService = {
   login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
     const response = await apiPublic.post<AuthResponse>(
@@ -13,8 +56,7 @@ export const authService = {
       credentials,
     );
     if (response.data.token) {
-      localStorage.setItem("token", response.data.token);
-      localStorage.setItem("user", JSON.stringify(response.data));
+      persistAuth(response.data);
     }
     return response.data;
   },
@@ -22,8 +64,7 @@ export const authService = {
   register: async (data: RegisterData): Promise<AuthResponse> => {
     const response = await apiPublic.post<AuthResponse>("/auth/register", data);
     if (response.data.token) {
-      localStorage.setItem("token", response.data.token);
-      localStorage.setItem("user", JSON.stringify(response.data));
+      persistAuth(response.data);
     }
     return response.data;
   },
@@ -34,19 +75,16 @@ export const authService = {
   },
 
   getCurrentUser: (): User | null => {
-    const userStr = localStorage.getItem("user");
-    if (userStr) {
-      return JSON.parse(userStr);
-    }
-    return null;
+    return getStoredUser();
   },
 
   updateCurrentUser: (updates: Partial<User>): User | null => {
-    const userStr = localStorage.getItem("user");
-    if (!userStr) {
+    const existing = getStoredUser();
+
+    if (!existing) {
       return null;
     }
-    const existing = JSON.parse(userStr);
+
     const nextUser = { ...existing, ...updates };
     localStorage.setItem("user", JSON.stringify(nextUser));
     return nextUser;
