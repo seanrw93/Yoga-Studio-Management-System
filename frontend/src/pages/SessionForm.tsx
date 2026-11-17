@@ -1,24 +1,32 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { apiPrivate } from "../services/api";
-import { Teacher, Session } from "../types";
+import { isCancel } from "axios";
+import { sessionService } from "../services/sessions.service";
+import { teacherService } from "../services/teacher.service";
+import { Teacher, SessionFormData } from "../types";
 import { useAuth } from "../context/AuthProvider";
+import { getErrorMessage } from "../utils/errors";
+
+// teacherId is "" until a teacher is picked in the select
+type SessionFormState = Omit<SessionFormData, "teacherId"> & {
+  teacherId: number | "";
+};
 
 function SessionForm() {
-  const { user, token } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const { id } = useParams();
   const isEditMode = !!id;
 
-  const [formData, setFormData] = useState<any>({
+  const [formData, setFormData] = useState<SessionFormState>({
     name: "",
     date: "",
     description: "",
     teacherId: "",
   });
-  const [teachers, setTeachers] = useState<any>([]);
-  const [loading, setLoading] = useState<any>(false);
-  const [error, setError] = useState<any>("");
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   // Redirect if not admin
   useEffect(() => {
@@ -28,76 +36,75 @@ function SessionForm() {
   }, [user, navigate]);
 
   useEffect(() => {
-    fetchTeachers();
-    if (isEditMode) {
-      fetchSession();
-    }
-  }, [id]);
+    const controller = new AbortController();
 
-  const fetchTeachers = async (): Promise<any> => {
-    try {
-      const response = await apiPrivate.get<Teacher[]>("/teacher", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setTeachers(response.data);
-    } catch (err: any) {
-      console.error("Failed to fetch teachers", err);
-    }
+    const loadTeachers = async (): Promise<void> => {
+      try {
+        setTeachers(await teacherService.getAll(controller.signal));
+      } catch (err: unknown) {
+        if (isCancel(err)) return;
+        console.error("Failed to fetch teachers", err);
+      }
+    };
+
+    const loadSession = async (): Promise<void> => {
+      try {
+        const session = await sessionService.getById(
+          Number(id),
+          controller.signal,
+        );
+        setFormData({
+          name: session.name,
+          date: new Date(session.date).toISOString().split("T")[0],
+          description: session.description,
+          teacherId: session.teacher.id,
+        });
+      } catch (err: unknown) {
+        if (isCancel(err)) return;
+        setError(getErrorMessage(err, "Failed to load session"));
+        console.error(err);
+      }
+    };
+
+    loadTeachers();
+    if (isEditMode) loadSession();
+
+    return () => controller.abort();
+  }, [id, isEditMode]);
+
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >,
+  ): void => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: name === "teacherId" ? parseInt(value) : value,
+    }));
   };
 
-  const fetchSession = async (): Promise<any> => {
-    try {
-      const response = await apiPrivate.get<Session>(`/session/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const session = response.data;
-      setFormData({
-        name: session.name,
-        date: new Date(session.date).toISOString().split("T")[0],
-        description: session.description,
-        teacherId: session.teacher.id,
-      });
-    } catch (err: any) {
-      setError("Failed to load session");
-      console.error(err);
-    }
-  };
-
-  const handleChange = (e: any): any => {
-    const value =
-      e.target.name === "teacherId" ? parseInt(e.target.value) : e.target.value;
-    setFormData({
-      ...formData,
-      [e.target.name]: value,
-    });
-  };
-
-  const handleSubmit = async (e: any): Promise<any> => {
+  const handleSubmit = async (e: React.SubmitEvent): Promise<void> => {
     e.preventDefault();
+    if (formData.teacherId === "") return;
+
     setError("");
     setLoading(true);
 
+    const payload: SessionFormData = {
+      ...formData,
+      teacherId: formData.teacherId,
+    };
+
     try {
       if (isEditMode) {
-        await apiPrivate.put(`/session/${id}`, formData, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        await sessionService.update(Number(id), payload);
       } else {
-        await apiPrivate.post("/session", formData, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        await sessionService.create(payload);
       }
       navigate("/sessions");
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to save session");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Failed to save session"));
     } finally {
       setLoading(false);
     }
@@ -170,7 +177,7 @@ function SessionForm() {
                 required
               >
                 <option value="">Select a teacher</option>
-                {teachers.map((teacher: any) => (
+                {teachers.map((teacher) => (
                   <option key={teacher.id} value={teacher.id}>
                     {teacher.firstName} {teacher.lastName}
                   </option>
