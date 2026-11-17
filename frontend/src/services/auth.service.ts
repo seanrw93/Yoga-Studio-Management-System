@@ -1,5 +1,10 @@
 import { apiPublic } from "./api";
-import { AuthResponse, LoginCredentials, RegisterData, User } from "../types";
+import type {
+  AuthResponse,
+  LoginCredentials,
+  RegisterData,
+  User,
+} from "../types";
 
 export const authService = {
   login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
@@ -23,7 +28,7 @@ export const authService = {
     return response.data;
   },
 
-  logout: () => {
+  logout: (): void => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
   },
@@ -36,7 +41,7 @@ export const authService = {
     return null;
   },
 
-  updateCurrentUser: (updates: Partial<AuthResponse>): AuthResponse | null => {
+  updateCurrentUser: (updates: Partial<User>): User | null => {
     const userStr = localStorage.getItem("user");
     if (!userStr) {
       return null;
