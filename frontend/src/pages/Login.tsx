@@ -2,6 +2,9 @@ import React, { useState } from "react";
 import { isAxiosError } from "axios";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthProvider";
+import { loginSchema, type LoginFormData } from "../dto/auth.dto";
+
+type LoginFieldErrors = Partial<Record<keyof LoginFormData, string>>;
 
 function Login() {
   const navigate = useNavigate();
@@ -10,16 +13,30 @@ function Login() {
   const [password, setPassword] = useState<string>("");
   const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
+  const [fieldErrors, setFieldErrors] = useState<LoginFieldErrors>({});
 
   const handleSubmit = async (
     e: React.FormEvent<HTMLFormElement>,
   ): Promise<void> => {
     e.preventDefault();
     setError("");
+
+    const result = loginSchema.safeParse({ email, password });
+
+    if (!result.success) {
+      const fieldErrors = result.error.flatten().fieldErrors;
+      setFieldErrors({
+        email: fieldErrors.email?.[0],
+        password: fieldErrors.password?.[0],
+      });
+      return;
+    }
+
+    setFieldErrors({});
     setLoading(true);
 
     try {
-      await login({ email, password });
+      await login(result.data);
       navigate("/sessions");
     } catch (err: unknown) {
       setError(
@@ -58,10 +75,26 @@ function Login() {
               type="email"
               name="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setFieldErrors((prev) => ({ ...prev, email: undefined }));
+              }}
+              aria-invalid={Boolean(fieldErrors.email)}
+              aria-describedby={
+                fieldErrors.email ? "login-email-error" : undefined
+              }
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500"
               required
             />
+            {fieldErrors.email ? (
+              <p
+                id="login-email-error"
+                role="alert"
+                className="mt-1 text-sm text-red-600"
+              >
+                {fieldErrors.email}
+              </p>
+            ) : null}
           </div>
 
           <div className="mb-6">
@@ -76,10 +109,26 @@ function Login() {
               type="password"
               name="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                setFieldErrors((prev) => ({ ...prev, password: undefined }));
+              }}
+              aria-invalid={Boolean(fieldErrors.password)}
+              aria-describedby={
+                fieldErrors.password ? "login-password-error" : undefined
+              }
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500"
               required
             />
+            {fieldErrors.password ? (
+              <p
+                id="login-password-error"
+                role="alert"
+                className="mt-1 text-sm text-red-600"
+              >
+                {fieldErrors.password}
+              </p>
+            ) : null}
           </div>
 
           <button
