@@ -4,6 +4,7 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
+import type { ReactNode } from "react";
 import Navbar from "./components/Navbar";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -13,9 +14,14 @@ import SessionForm from "./pages/SessionForm";
 import Profile from "./pages/Profile";
 import { useAuth } from "./context/AuthProvider";
 
-function PrivateRoute({ children }: { children: React.ReactNode }) {
+function PrivateRoute({ children }: { children: ReactNode }) {
   const { isAuthenticated } = useAuth();
-  return isAuthenticated ? children : <Navigate to="/login" />;
+  return isAuthenticated ? children : <Navigate to="/login" replace />;
+}
+
+function AdminRoute({ children }: { children: ReactNode }) {
+  const { user } = useAuth();
+  return user?.admin ? children : <Navigate to="/sessions" replace />;
 }
 
 function App() {
@@ -47,7 +53,9 @@ function App() {
             path="/sessions/create"
             element={
               <PrivateRoute>
-                <SessionForm />
+                <AdminRoute>
+                  <SessionForm />
+                </AdminRoute>
               </PrivateRoute>
             }
           />
@@ -55,7 +63,9 @@ function App() {
             path="/sessions/edit/:id"
             element={
               <PrivateRoute>
-                <SessionForm />
+                <AdminRoute>
+                  <SessionForm />
+                </AdminRoute>
               </PrivateRoute>
             }
           />

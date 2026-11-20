@@ -4,7 +4,6 @@ import { isCancel } from "axios";
 import { sessionService } from "../services/sessions.service";
 import { teacherService } from "../services/teacher.service";
 import { Teacher, SessionFormData } from "../types";
-import { useAuth } from "../context/AuthProvider";
 import { getErrorMessage } from "../utils/errors";
 
 // teacherId is "" until a teacher is picked in the select
@@ -13,7 +12,6 @@ type SessionFormState = Omit<SessionFormData, "teacherId"> & {
 };
 
 function SessionForm() {
-  const { user } = useAuth();
   const navigate = useNavigate();
   const { id } = useParams();
   const isEditMode = !!id;
@@ -27,13 +25,6 @@ function SessionForm() {
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
-  // Redirect if not admin
-  useEffect(() => {
-    if (!user?.admin) {
-      navigate("/sessions");
-    }
-  }, [user, navigate]);
 
   useEffect(() => {
     const controller = new AbortController();
