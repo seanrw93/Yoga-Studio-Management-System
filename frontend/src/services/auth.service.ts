@@ -51,22 +51,19 @@ const persistAuth = ({ token, ...user }: AuthResponse): void => {
 
 export const authService = {
   login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
-    const response = await apiPublic.post<AuthResponse>(
-      "/auth/login",
-      credentials,
-    );
-    if (response.data.token) {
-      persistAuth(response.data);
+    const res = await apiPublic.post<AuthResponse>("/auth/login", credentials);
+    if (res.data.token) {
+      persistAuth(res.data);
     }
-    return response.data;
+    return res.data;
   },
 
   register: async (data: RegisterData): Promise<AuthResponse> => {
-    const response = await apiPublic.post<AuthResponse>("/auth/register", data);
-    if (response.data.token) {
-      persistAuth(response.data);
+    const res = await apiPublic.post<AuthResponse>("/auth/register", data);
+    if (res.data.token) {
+      persistAuth(res.data);
     }
-    return response.data;
+    return res.data;
   },
 
   logout: (): void => {

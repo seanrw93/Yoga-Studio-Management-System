@@ -3,6 +3,10 @@ import { useNavigate, Link } from "react-router-dom";
 import { isAxiosError } from "axios";
 import { useAuth } from "../context/AuthProvider";
 import { RegisterData } from "../types";
+import { registerSchema, type RegisterFormData } from "../dto/auth.dto";
+import { getServerFieldErrors } from "../utils/errors";
+
+type RegisterFieldErrors = Partial<Record<keyof RegisterFormData, string>>;
 
 function Register() {
   const navigate = useNavigate();
@@ -15,11 +19,16 @@ function Register() {
   });
   const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
+  const [fieldErrors, setFieldErrors] = useState<RegisterFieldErrors>({});
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ): void => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    setFieldErrors((prev) => ({
+      ...prev,
+      [e.target.name]: undefined,
+    }));
   };
 
   const handleSubmit = async (
@@ -27,17 +36,54 @@ function Register() {
   ): Promise<void> => {
     e.preventDefault();
     setError("");
+
+    const result = registerSchema.safeParse(formData);
+
+    if (!result.success) {
+      const fieldErrors = result.error.flatten().fieldErrors;
+      setFieldErrors({
+        firstName: fieldErrors.firstName?.[0],
+        lastName: fieldErrors.lastName?.[0],
+        email: fieldErrors.email?.[0],
+        password: fieldErrors.password?.[0],
+      });
+      return;
+    }
+
+    setFieldErrors({});
     setLoading(true);
 
     try {
-      await register(formData);
+      await register(result.data);
       navigate("/sessions");
     } catch (err: unknown) {
-      setError(
-        isAxiosError(err)
-          ? (err.response?.data?.message ?? "Registration failed")
-          : "Registration failed",
-      );
+      if (isAxiosError(err)) {
+        const responseData = err.response?.data as
+          | {
+              message?: string;
+              errors?: unknown;
+            }
+          | undefined;
+        const serverFieldErrors = getServerFieldErrors(responseData);
+
+        if (Object.keys(serverFieldErrors).length > 0) {
+          setFieldErrors((prev) => ({
+            ...prev,
+            ...serverFieldErrors,
+          }));
+          setError("");
+        } else if (responseData?.message === "Email already exists") {
+          setFieldErrors((prev) => ({
+            ...prev,
+            email: "Email already exists",
+          }));
+          setError("");
+        } else {
+          setError(responseData?.message ?? "Registration failed");
+        }
+      } else {
+        setError("Registration failed");
+      }
     } finally {
       setLoading(false);
     }
@@ -70,9 +116,22 @@ function Register() {
               name="firstName"
               value={formData.firstName}
               onChange={handleChange}
+              aria-invalid={Boolean(fieldErrors.firstName)}
+              aria-describedby={
+                fieldErrors.firstName ? "register-first-name-error" : undefined
+              }
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500"
               required
             />
+            {fieldErrors.firstName ? (
+              <p
+                id="register-first-name-error"
+                role="alert"
+                className="mt-1 text-sm text-red-600"
+              >
+                {fieldErrors.firstName}
+              </p>
+            ) : null}
           </div>
 
           <div className="mb-4">
@@ -88,9 +147,22 @@ function Register() {
               name="lastName"
               value={formData.lastName}
               onChange={handleChange}
+              aria-invalid={Boolean(fieldErrors.lastName)}
+              aria-describedby={
+                fieldErrors.lastName ? "register-last-name-error" : undefined
+              }
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500"
               required
             />
+            {fieldErrors.lastName ? (
+              <p
+                id="register-last-name-error"
+                role="alert"
+                className="mt-1 text-sm text-red-600"
+              >
+                {fieldErrors.lastName}
+              </p>
+            ) : null}
           </div>
 
           <div className="mb-4">
@@ -106,9 +178,22 @@ function Register() {
               name="email"
               value={formData.email}
               onChange={handleChange}
+              aria-invalid={Boolean(fieldErrors.email)}
+              aria-describedby={
+                fieldErrors.email ? "register-email-error" : undefined
+              }
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500"
               required
             />
+            {fieldErrors.email ? (
+              <p
+                id="register-email-error"
+                role="alert"
+                className="mt-1 text-sm text-red-600"
+              >
+                {fieldErrors.email}
+              </p>
+            ) : null}
           </div>
 
           <div className="mb-6">
@@ -124,10 +209,23 @@ function Register() {
               name="password"
               value={formData.password}
               onChange={handleChange}
+              aria-invalid={Boolean(fieldErrors.password)}
+              aria-describedby={
+                fieldErrors.password ? "register-password-error" : undefined
+              }
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500"
               required
               minLength={8}
             />
+            {fieldErrors.password ? (
+              <p
+                id="register-password-error"
+                role="alert"
+                className="mt-1 text-sm text-red-600"
+              >
+                {fieldErrors.password}
+              </p>
+            ) : null}
           </div>
 
           <button
