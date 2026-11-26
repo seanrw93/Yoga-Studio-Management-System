@@ -59,12 +59,14 @@ A full-stack web application for managing yoga studio operations, including sess
 ### 1. Clone the repository
 
 ```bash
-cd p4-dfsjs-starter
+git clone https://github.com/seanrw93/Yoga-Studio-Management-System.git
+cd Yoga-Studio-Management-System
 ```
 
 ### 2. Install Backend Dependencies
 
 ```bash
+npm install          # root: installs the Husky git hooks
 cd backend
 npm install
 ```
@@ -85,24 +87,32 @@ cd ../backend
 cp .env.example .env
 ```
 
-The default configuration should work with Docker Compose:
+The default configuration works with Docker Compose:
 
 ```env
-DATABASE_URL="postgresql://yogauser:yogapass@localhost:5432/yogastudio"
+DATABASE_URL="postgresql://yogauser:yogapass@localhost:5433/yogastudio"
 JWT_SECRET="your-secret-key-change-me-in-production"
 PORT=8080
+CORS_ORIGIN=http://localhost:3000
 NODE_ENV=development
+# Dev-only: set to true (with NODE_ENV=development) to allow self-promotion to admin
+ENABLE_ADMIN_SELF_PROMOTION=false
 ```
+
+The backend validates these at startup and refuses to start if any are missing or invalid:
+- `JWT_SECRET` must be at least 32 characters.
+- `CORS_ORIGIN` must be a full URL.
+- `NODE_ENV` must be `development`, `test` or `production`.
 
 ### 5. Start PostgreSQL with Docker
 
 From the project root:
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
-This will start a PostgreSQL container on port 5432.
+This starts a PostgreSQL container on port **5433** (mapped from the container's 5432).
 
 ### 6. Run Database Migrations
 
@@ -165,16 +175,20 @@ The frontend will run on `http://localhost:3000`
 - `POST /api/session` - Create session (admin only)
 - `PUT /api/session/:id` - Update session (admin only)
 - `DELETE /api/session/:id` - Delete session (admin only)
-- `POST /api/session/:id/participate/:userId` - Join session (protected)
-- `DELETE /api/session/:id/participate/:userId` - Leave session (protected)
+- `POST /api/session/:id/participate` - Join session as the current user (protected)
+- `DELETE /api/session/:id/participate` - Leave session as the current user (protected)
 
 ### Teachers
 - `GET /api/teacher` - Get all teachers (protected)
 - `GET /api/teacher/:id` - Get teacher by ID (protected)
 
 ### Users
-- `GET /api/user/:id` - Get user by ID (protected)
+- `GET /api/user/:id` - Get user by ID (own account or admin)
 - `DELETE /api/user/:id` - Delete user account (protected)
+- `POST /api/user/promote-admin` - Promote the current user to admin (dev only: requires `NODE_ENV=development` and `ENABLE_ADMIN_SELF_PROMOTION=true`)
+
+### Health
+- `GET /api/health` - API health check (public)
 
 ## Database Schema
 
@@ -234,6 +248,11 @@ npm run prisma:generate  # Generate Prisma client
 npm run prisma:migrate   # Run database migrations
 npm run prisma:seed      # Seed the database
 npm run prisma:studio    # Open Prisma Studio
+npm test             # Run unit tests
+npm run test:coverage    # Run unit tests with a coverage report
+npm run typecheck    # Type-check without emitting
+npm run lint         # Lint with ESLint
+npm run format:check # Check formatting with Prettier
 ```
 
 ### Frontend
@@ -242,20 +261,45 @@ npm run prisma:studio    # Open Prisma Studio
 npm run dev          # Start Vite development server
 npm run build        # Build for production
 npm run preview      # Preview production build
+npm test             # Run unit tests
+npm run test:watch   # Run unit tests in watch mode
+npm run test:coverage    # Run unit tests with a coverage report
+npm run typecheck    # Type-check without emitting
+npm run lint         # Lint with ESLint
+npm run format:check # Check formatting with Prettier
 ```
+
+### E2E
+
+```bash
+npm test             # Run the Playwright suite
+npm run test:ui      # Open Playwright's interactive UI
+npm run report       # Open the last HTML report
+```
+
+### Git hooks
+
+Husky runs these automatically from the project root:
+- **pre-commit:** `typecheck`, `lint` and `format:check` in both `frontend/` and `backend/`
+- **pre-push:** `typecheck` in both
 
 ## Project Structure
 
 ```
-p4-dfsjs-starter/
+Yoga-Studio-Management-System/
 ├── backend/
 │   ├── src/
+│   │   ├── config/           # Validated environment config
 │   │   ├── controllers/      # Request handlers
-│   │   ├── middleware/       # Auth middleware
 │   │   ├── dto/              # Zod validation schemas
-│   │   ├── utils/            # JWT utilities
+│   │   ├── middleware/       # Auth, authorization, validation, error handling
 │   │   ├── routes/           # API routes
-│   │   └── app.ts            # Express app setup
+│   │   ├── services/         # Business logic and database access
+│   │   ├── test-utils/       # Test helpers
+│   │   ├── types/            # TypeScript types
+│   │   ├── utils/            # JWT and ID parsing utilities
+│   │   ├── app.ts            # Express app setup
+│   │   └── server.ts         # Server entry point
 │   ├── prisma/
 │   │   ├── schema.prisma     # Database schema
 │   │   └── seed.ts           # Database seeding
@@ -264,27 +308,45 @@ p4-dfsjs-starter/
 │   └── .env
 ├── frontend/
 │   ├── src/
-│   │   ├── pages/            # React page components
 │   │   ├── components/       # Reusable components
+│   │   ├── context/          # Auth context and provider
+│   │   ├── dto/              # Zod form validation schemas
+│   │   ├── pages/            # React page components
 │   │   ├── services/         # API services
+│   │   ├── test/             # Test setup and shared helpers
 │   │   ├── types/            # TypeScript types
+│   │   ├── utils/            # Error helpers
 │   │   ├── App.tsx
 │   │   └── main.tsx
 │   ├── package.json
 │   ├── vite.config.ts
 │   └── tailwind.config.js
+├── e2e/
+│   ├── tests/                # Playwright specs
+│   ├── fixtures.ts           # Logged-in member/admin fixtures
+│   ├── global-setup.ts       # Resets and seeds the E2E database
+│   └── playwright.config.ts
+├── .husky/                   # Git hooks
 ├── docker-compose.yml
 └── README.md
 ```
 
 ## Testing
 
-The project supports comprehensive testing with the following frameworks:
-- **Unit tests**: For testing individual components and utilities
-- **Integration tests**: For testing API endpoints
-- **End-to-end tests**: For testing critical user flows
+| Layer | Tool | Location | Command |
+|---|---|---|---|
+| Backend unit tests | Vitest | `backend/src/**/*.{test,spec}.ts` | `cd backend && npm test` |
+| Frontend unit tests | Vitest + Testing Library | `frontend/src/**/*.test.{ts,tsx}` | `cd frontend && npm test` |
+| End-to-end tests | Playwright | `e2e/tests/` | `cd e2e && npm test` |
 
-Run tests with the appropriate npm scripts in each directory.
+Use `npm run test:coverage` in `backend/` or `frontend/` for a coverage report.
+
+### Unit tests
+
+- **Backend:** covers config, DTOs, middleware, routes, controllers, services and utils, with Prisma mocked.
+- **Frontend:** covers pages, components, context, services, DTOs and utils, with the API mocked.
+  - Coverage is measured across all source files.
+  - Shared fixtures live in `frontend/src/test/helpers.ts`.
 
 ### End-to-end tests (Playwright)
 
@@ -310,22 +372,30 @@ npm test
 docker ps
 
 # Restart PostgreSQL
-docker-compose restart postgres
+docker compose restart postgres
 
 # View logs
-docker-compose logs postgres
+docker compose logs postgres
 ```
 
 ### Port already in use
+macOS / Linux:
 ```bash
-# Check what's using port 8080
-lsof -i :8080
-
-# Check what's using port 3000
-lsof -i :3000
-
-# Kill the process if needed
+lsof -i :8080        # or :3000
 kill -9 <PID>
+```
+
+Windows (PowerShell):
+```powershell
+netstat -ano | findstr :8080   # or :3000; the last column is the PID
+taskkill /PID <PID> /F
+```
+
+### Every Vitest suite fails with `Cannot read properties of undefined (reading 'config')` (Windows)
+The terminal's path starts with a lowercase drive letter (`c:\...`), which VS Code terminals sometimes use. Vitest then loads two copies of itself. Run the tests from a path that starts with `C:\`:
+```powershell
+Set-Location "C:\path\to\Yoga-Studio-Management-System\frontend"
+npm test
 ```
 
 ### Prisma issues
@@ -339,7 +409,7 @@ npx prisma generate
 
 ## Contributing
 
-Please follow the existing code style and ensure all tests pass before submitting changes.
+Please follow the existing code style and make sure all tests pass before submitting changes. The Husky hooks check types, linting and formatting on every commit (see [Git hooks](#git-hooks)).
 
 ## License
 
