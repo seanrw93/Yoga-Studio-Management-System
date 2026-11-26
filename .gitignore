@@ -46,3 +46,7 @@ backend/prisma/migrations/
 # Stryker
 .stryker-tmp/
 reports/
+
+# Playwright
+e2e/test-results/
+e2e/playwright-report/
