@@ -86,6 +86,8 @@ function SessionForm() {
 
     const payload: SessionFormData = {
       ...formData,
+      // The API requires an ISO datetime; a yyyy-mm-dd string parses as UTC midnight.
+      date: new Date(formData.date).toISOString(),
       teacherId: formData.teacherId,
     };
 
