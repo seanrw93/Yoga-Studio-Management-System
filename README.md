@@ -286,6 +286,22 @@ The project supports comprehensive testing with the following frameworks:
 
 Run tests with the appropriate npm scripts in each directory.
 
+### End-to-end tests (Playwright)
+
+The E2E suite in `e2e/` drives the real frontend and backend together in Chromium.
+
+```bash
+docker compose up -d postgres   # the tests need the database container
+cd e2e
+npm install
+npx playwright install chromium # first time only
+npm test
+```
+
+- Playwright starts the backend (`:8080`) and frontend (`:3000`) itself. Stop your dev servers first, because the ports must be free.
+- Each run resets and seeds a separate `yogastudio_e2e` database, so your dev data is never touched. Override it with `E2E_DATABASE_URL`.
+- On failure, screenshots and traces are saved. Open the report with `npm run report`, or a trace with `npx playwright show-trace <path>`.
+
 ## Troubleshooting
 
 ### Database connection issues

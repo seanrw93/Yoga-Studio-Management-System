@@ -75,7 +75,7 @@ describe("SessionForm page", () => {
 
     expect(sessionService.create).toHaveBeenCalledWith({
       name: "Evening Calm",
-      date: "2026-12-24",
+      date: "2026-12-24T00:00:00.000Z",
       description: "Wind down",
       teacherId: 4,
     });
@@ -139,7 +139,7 @@ describe("SessionForm page", () => {
 
     expect(sessionService.update).toHaveBeenCalledWith(12, {
       name: "Morning Flow",
-      date: "2026-12-01",
+      date: "2026-12-01T00:00:00.000Z",
       description: "A gentle morning session",
       teacherId: 3,
     });
